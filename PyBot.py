@@ -24,7 +24,7 @@ def start_message(message):
         queries_to_bd.save_simple_message(message)
         
         #отправляет основное меню
-        if message.text.lower() == "/start" or message.text.lower() == "/help" or message.text.lower() == "/restart" or message.text.lower() == "/menu":
+        if message.text.lower() in ["/start","/help","/restart","/menu"]:
             MypyBot.send_message(message.chat.id, 'Меню', reply_markup = keyboards.main_menu())
         else:            
             MypyBot.send_message(message.chat.id, 'Для вызова меню используйте команду /menu')
