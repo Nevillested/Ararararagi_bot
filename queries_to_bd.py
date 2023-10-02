@@ -26,7 +26,6 @@ def check_user(data_from_message):
     language_code = "'" + str(data_from_message.from_user.language_code) + "'"
     is_premium = "'" + str(data_from_message.from_user.is_premium) + "'"
     is_bot = "'" + str(data_from_message.from_user.is_bot) + "'"
-
     cur.execute("""
     MERGE INTO arabot.users u
     USING (SELECT """ + chat_id + """        AS chat_id,
@@ -123,3 +122,64 @@ def insert_new_smiple_message_ver(data_from_message):
      order by message_version desc
      limit 1
     """)
+
+#сохраняет исходящие сообщения меню по нажатии пользователем на кнопку
+def save_outcome_data(chat_id, msg_id, text, flg_main_menu = None):
+    activity_menu_flg = ''
+    if flg_main_menu == None:
+        activity_menu_flg = '0'
+    else:
+        activity_menu_flg = '1'
+    cur.execute("""
+    INSERT INTO arabot.outcome_data
+    (
+     chat_id,
+     message_id,
+     activity_menu_flg,
+     text_to_user
+    )
+    values
+    (
+     """ + str(chat_id) + """,
+     """ + str(msg_id + 1) + """,
+     """ + activity_menu_flg + """,
+     '""" + str(text) + """'
+    )
+    """)
+
+#получает список айдишников сообщений, в рамках которых открыты меню у пользователя
+def get_msg_of_open_menu(chat_id):
+    cur.execute("""
+    select distinct message_id
+      from arabot.outcome_data
+     where chat_id = """ + str(chat_id) + """
+       and activity_menu_flg = 1
+    """)
+    tuple_data = cur.fetchall()
+    array_messages = []
+    for item in tuple_data:
+        array_messages.append(item[0])
+    return array_messages
+
+#запоминает, в рамках каких msg_id были закрыты главные меню
+def close_old_opening_menu(chat_id, array_msg_id):
+    for msg in array_msg_id:
+        cur.execute("""
+        update arabot.outcome_data
+           set activity_menu_flg = 0
+         where chat_id = """ + str(chat_id) + """
+           and message_id = """ + str(msg) + """
+    """)
+
+#получает последнее сообщение, которое отправил пользователю и немного редактирует его. В данном случае - добавляет восклицательный знак.
+#Это необходимо, т.к. если есть кейс, что пользователь просит в рамках одного меню еще пикчу (нажимает на кнопку "еще"), то телеграму нельзя отправить тоже самое меню. Оно должно быть другим. Иначе - телега даёт ошибку.
+def get_last_bot_text_menu(chat_id):
+    cur.execute("""
+    select text_to_user
+      from arabot.outcome_data
+     where chat_id = """ + str(chat_id) + """
+     order by dt_created desc
+     limit 1
+    """)
+    tuple_data = cur.fetchone()
+    return tuple_data[0] + '!'

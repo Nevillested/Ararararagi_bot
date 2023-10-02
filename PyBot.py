@@ -24,11 +24,38 @@ def start_message(message):
         #сохраняет входящее сообщение
         queries_to_bd.save_simple_message(message)
         
-        #отправляет основное меню
-        if message.text.lower() in ["/start","/help","/restart","/menu"]:
-            MypyBot.send_message(message.chat.id, '*Главное меню*', reply_markup = keyboards.main_menu(message.chat.id), parse_mode = 'MarkdownV2')
+        if message.text.lower() in ["/start","/help","/menu"]:
+            
+            #проверяет есть ли уже с пользователем открытое меню
+            msg_list = queries_to_bd.get_msg_of_open_menu(message.chat.id)
+            
+            #если уже есть открытые меню...
+            if len(msg_list) != 0:
+                
+                #...закрывает их
+                for msg in msg_list:
+                    
+                    MypyBot.edit_message_text(chat_id = message.chat.id, message_id = msg, text = 'Потрачено')
+                    
+                #запоминает в бд, что закрыл их
+                queries_to_bd.close_old_opening_menu(message.chat.id, msg_list)
+                
+            #получает основное меню
+            (text_out, reply_markup_out) = keyboards.main_menu(message.chat.id)
+            
+            #отправляет основное меню
+            MypyBot.send_message(message.chat.id, text_out, reply_markup = reply_markup_out, parse_mode = 'MarkdownV2')
+            
+            #сохраняет данные
+            queries_to_bd.save_outcome_data(message.chat.id, message.message_id, text_out, 1)
+            
         else:
-            MypyBot.send_message(message.chat.id, '``` Для вызова меню используйте команду /menu ```', parse_mode = 'MarkdownV2')
+            text_out = '``` Для вызова меню используйте команду /menu ```'
+            
+            MypyBot.send_message(message.chat.id, text_out, parse_mode = 'MarkdownV2')
+            
+            #сохраняет данные
+            queries_to_bd.save_outcome_data(message.chat.id, message.message_id, text_out)
             
     except Exception as e:
         print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
@@ -48,13 +75,13 @@ def catch_edit_msg(message):
 #хэндлер нажатий на кнопки
 @MypyBot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
-    try:
+    #try:
         
         print(f"{call.from_user.username} нажал кнопку {call.data}.\n")
         
         callback_query_cases.case_main(call, MypyBot)
         
-    except Exception as e:
-        print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
+    #except Exception as e:
+        #print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
 
 MypyBot.polling(none_stop=True)
