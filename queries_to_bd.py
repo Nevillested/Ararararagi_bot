@@ -90,7 +90,7 @@ def save_simple_message(data_from_message):
     """)
 
 #добавляет новую версию сообщения
-def insert_new_message_ver(data_from_message):
+def insert_new_smiple_message_ver(data_from_message):
     chat_id = str(data_from_message.chat.id)
     message_id = str(data_from_message.message_id)
     message_type = "'" + str(data_from_message.content_type) + "'"

@@ -3,6 +3,7 @@ import my_cfg
 import inspect
 import queries_to_bd
 import keyboards
+import callback_query_cases
 
 MypyBot = telebot.TeleBot(my_cfg.telegram_token, parse_mode = None)
 
@@ -25,9 +26,9 @@ def start_message(message):
         
         #отправляет основное меню
         if message.text.lower() in ["/start","/help","/restart","/menu"]:
-            MypyBot.send_message(message.chat.id, 'Меню', reply_markup = keyboards.main_menu())
-        else:            
-            MypyBot.send_message(message.chat.id, 'Для вызова меню используйте команду /menu')
+            MypyBot.send_message(message.chat.id, '*Главное меню*', reply_markup = keyboards.main_menu(message.chat.id), parse_mode = 'MarkdownV2')
+        else:
+            MypyBot.send_message(message.chat.id, '``` Для вызова меню используйте команду /menu ```', parse_mode = 'MarkdownV2')
             
     except Exception as e:
         print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
@@ -39,7 +40,7 @@ def catch_edit_msg(message):
         print(f"Пользователь {message.from_user.username} отредактировал сообщение.\n")
         
         #добавляет новую версию сообщения
-        queries_to_bd.insert_new_message_ver(message)
+        queries_to_bd.insert_new_smiple_message_ver(message)
             
     except Exception as e:
         print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
@@ -50,6 +51,8 @@ def callback_inline(call):
     try:
         
         print(f"{call.from_user.username} нажал кнопку {call.data}.\n")
+        
+        callback_query_cases.case_main(call, MypyBot)
         
     except Exception as e:
         print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
