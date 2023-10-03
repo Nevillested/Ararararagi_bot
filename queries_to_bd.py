@@ -124,7 +124,7 @@ def insert_new_smiple_message_ver(data_from_message):
     """)
 
 #сохраняет исходящие сообщения меню по нажатии пользователем на кнопку
-def save_outcome_data(chat_id, msg_id, text, flg_main_menu = None):
+def save_outcome_data(chat_id, msg_id, msg_type, text, flg_main_menu = None):
     activity_menu_flg = ''
     if flg_main_menu == None:
         activity_menu_flg = '0'
@@ -135,6 +135,7 @@ def save_outcome_data(chat_id, msg_id, text, flg_main_menu = None):
     (
      chat_id,
      message_id,
+     message_type,
      activity_menu_flg,
      text_to_user
     )
@@ -142,6 +143,7 @@ def save_outcome_data(chat_id, msg_id, text, flg_main_menu = None):
     (
      """ + str(chat_id) + """,
      """ + str(msg_id + 1) + """,
+     '""" + msg_type + """',
      """ + activity_menu_flg + """,
      '""" + str(text) + """'
     )
@@ -183,3 +185,124 @@ def get_last_bot_text_menu(chat_id):
     """)
     tuple_data = cur.fetchone()
     return tuple_data[0] + '!'
+
+#наполняем таблицу с музыкой, проставляем ID будущих кнопок
+def gen_music_data(list_data_of_music_files):
+    #очищаем таблицу
+    cur.execute("""truncate table arabot.music_files""")
+    #наполянем данными по существующим группам-альбомам-песням
+    for item in list_data_of_music_files:
+        sql_stmt = """
+        INSERT INTO arabot.music_files (FIRST_CHAR_PERFORMER_DISPLAY_NAME,
+                                        PERFORMER_DISPLAY_NAME,
+                                        ALBUM_DISPLAY_NAME,
+                                        SONG_DISPLAY_NAME,
+                                        PATH_TO_FILE)
+        VALUES ('""" + (str(item[0])).replace("'","'||''''||'") + """',
+                '""" + (str(item[1])).replace("'","'||''''||'")  + """',
+                '""" + (str(item[2])).replace("'","'||''''||'") + """',
+                '""" + (str(item[3])).replace("'","'||''''||'")  + """',
+                '""" + (str(item[4])).replace("'","'||''''||'")  + """')
+        """
+        cur.execute(sql_stmt)
+    #создаем айдишники
+    cur.execute("CALL arabot.set_music_id();")
+
+#выдает словарь с уникальными первыми буквами названий групп и их айдишниками
+def get_abc_dict():
+    cur.execute("""
+    SELECT DISTINCT first_char_performer_display_name,
+                    first_char_performer_id
+               FROM arabot.music_files
+    """)
+    rows = cur.fetchall()
+    abc_dict = {}
+    for item in rows:
+        abc_dict[item[0]] = item[1]
+    return abc_dict
+
+#выдает словарь с уникальными названиями групп и их айдишниками
+def get_performer_dict(char_id):
+    cur.execute("""
+    SELECT DISTINCT performer_display_name,
+                    performer_display_id
+               FROM arabot.music_files
+              WHERE first_char_performer_id = '""" + char_id + """'
+    """)
+    rows = cur.fetchall()
+    performer_dict = {}
+    for item in rows:
+        performer_dict[item[0]] = item[1]
+    return performer_dict
+
+#выдает словарь с уникальными названиями альбомов и их айдишниками
+def get_albums_dict(performer_id):
+    cur.execute("""
+    SELECT DISTINCT album_display_name,
+                    album_display_id
+               FROM arabot.music_files
+              WHERE performer_display_id = '""" + performer_id + """'
+    """)
+    rows = cur.fetchall()
+    albums_dict = {}
+    for item in rows:
+        albums_dict[item[0]] = item[1]
+    return albums_dict
+
+#выдает словарь с уникальными песнями в альбоме и их айдишниками
+def get_songs_in_album_dict(album_id):
+    cur.execute("""
+    SELECT DISTINCT song_display_name,
+                    song_display_id
+               FROM arabot.music_files
+              WHERE album_display_id = '""" + album_id + """'
+    """)
+    rows = cur.fetchall()
+    songs_dict = {}
+    for item in rows:
+        songs_dict[item[0]] = item[1]
+    return songs_dict
+
+#выдает путь к песне
+def get_song_path(song_id):
+    cur.execute("""
+    SELECT path_to_file
+      FROM arabot.music_files
+     WHERE song_display_id = '""" + song_id + """'
+    """)
+    result_tuple = cur.fetchone()
+    result_string = result_tuple[0]
+    return result_string
+
+#получает ID альбома по ID песни
+def get_album_id_by_song_id(song_id):
+    cur.execute("""
+    SELECT album_display_id
+      FROM arabot.music_files
+     WHERE song_display_id = '""" + song_id + """'
+    """)
+    result_tuple = cur.fetchone()
+    result_string = result_tuple[0]
+    return result_string
+
+#получает ID исполнителя по ID альбома
+def get_performer_id_by_album_id(album_id):
+    cur.execute("""
+    SELECT distinct performer_display_id
+      FROM arabot.music_files
+     WHERE album_display_id = '""" + album_id + """'
+    """)
+    result_tuple = cur.fetchone()
+    result_string = result_tuple[0]
+    return result_string
+
+#получает ID исполнителей по ID первой пуквы исполнителей
+def get_first_char_preformer_id_by_performer_id(performer_id):
+    cur.execute("""
+    SELECT distinct first_char_performer_id
+      FROM arabot.music_files
+     WHERE performer_display_id = '""" + performer_id + """'
+    """)
+    result_tuple = cur.fetchone()
+    result_string = result_tuple[0]
+    return result_string
