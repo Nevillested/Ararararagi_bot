@@ -23,7 +23,7 @@ def case_main(call, bot):
     elif current_btn_name.startswith('4'):
         (current_result_text, current_reply_markup, flg_need_response) = notifications(bot, current_chat_id, current_btn_name)
     elif current_btn_name.startswith('5'):
-        (current_result_text, current_reply_markup) = encrypting(bot, current_chat_id, current_btn_name)
+        (current_result_text, current_reply_markup, flg_need_response) = crypting(bot, current_chat_id, current_btn_name)
     elif current_btn_name.startswith('6'):
         (current_result_text, current_reply_markup) = japanese(bot, current_chat_id, current_btn_name)
     elif current_btn_name.startswith('7'):
@@ -43,7 +43,6 @@ def case_main(call, bot):
 def shinobu(bot, chat_id, msg_id, btn_data):
     text = ''
     reply_markup = types.InlineKeyboardMarkup()
-
     #кнопка, открывающая основное меню Шинобу
     if btn_data == '1':
         (text, reply_markup) = keyboards.shinobu_main()
@@ -74,14 +73,12 @@ def shinobu(bot, chat_id, msg_id, btn_data):
     #кнопка, возвращающая из основного меню с Шинобу в главное меню
     elif btn_data == '1/3':
         (text, reply_markup) = keyboards.main_menu(chat_id)
-
     return text, reply_markup
 
 #ветка кнопок с музыкой
 def music(bot, chat_id, btn_data):
     text = ''
     reply_markup = types.InlineKeyboardMarkup()
-
     #кнопка, открывающая меню со всеми исполнителями, сгруппированных по первому символу
     if btn_data == '2':
         (text, reply_markup) = keyboards.music_abc()
@@ -125,14 +122,12 @@ def music(bot, chat_id, btn_data):
     #кнопка, возвращающая на главное меню
     elif btn_data.startswith("2/back_5/"):
         (text, reply_markup) = keyboards.main_menu(chat_id)
-
     return text, reply_markup
 
 #ветка кнопок с подписками
 def subscriptions(bot, chat_id, btn_data):
     text = ''
     reply_markup = types.InlineKeyboardMarkup()
-
     #кнопка, выдающая главное меню со всеми подписками
     if btn_data == "3":
         (text, reply_markup) = keyboards.subscriptions_main()
@@ -169,7 +164,6 @@ def subscriptions(bot, chat_id, btn_data):
     #кнопка, возвращающая в главное меню
     elif btn_data == "3/back_main":
         (text, reply_markup) = keyboards.main_menu(chat_id)
-
     return text, reply_markup
 
 
@@ -223,22 +217,16 @@ def notifications(bot, chat_id, btn_data):
         target_value = (btn_data.split('/'))[-2]
         target_field = (btn_data.split('/'))[-3]
         repeat_flag = None
-
         if target_field == "year_num":
             text = 'Год установлен'
-
         elif target_field == "month_num":
             text = 'Месяц установлен'
-
         elif target_field == "day_num":
             text = 'День установлен'
-
         elif target_field == "hour_num":
             text = 'Час установлен'
-
         elif target_field == "minute_num":
             text = 'Минута установлена'
-
         elif target_field in ["every_year_flg", "every_month_flg", "every_week_flg", "every_day_flg", "every_hour_flg", "every_minute_flg", "repeat_flg"]:
             queries_to_bd.notification_reset_repeat(notification_id)
             text = 'Периодичность установлена'
@@ -246,7 +234,6 @@ def notifications(bot, chat_id, btn_data):
                 repeat_flag = 0
             else:
                 repeat_flag = 1
-
         elif target_field == "activity_flg":
             if target_value == '1':
                 text = 'Включено'
@@ -257,35 +244,59 @@ def notifications(bot, chat_id, btn_data):
     #кнопка, возвращающая в главное меню
     elif btn_data == '4/3':
         (text, reply_markup) = keyboards.main_menu(chat_id)
-
     return text, reply_markup, flg_need_response
 
-
 #ветка кнопок с шифрованием
-def encrypting(bot, chat_id, btn_data):
-    (text, reply_markup) = keyboards.encrypting_main()
-    return text, reply_markup
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def crypting(bot, chat_id, btn_data):
+    flg_need_response = 0
+    text = ''
+    reply_markup = types.InlineKeyboardMarkup()
+    #кнопка, возвращающая выбор языка
+    if btn_data == '5':
+        (text, reply_markup) = keyboards.crypting_lang()
+    #кнопка, возвращающая на главное меню
+    elif btn_data == '5/back/0':
+        (text, reply_markup) = keyboards.main_menu(chat_id)
+    #кнопка, возвращающая на выбор языка
+    elif btn_data == '5/back/1':
+        (text, reply_markup) = keyboards.crypting_lang()
+    #кнопка, возвращающая тип операции
+    elif btn_data.startswith("5/1/") or btn_data.startswith("5/back/2/"):
+        lang_code = (btn_data.split('/'))[-1]
+        (text, reply_markup) = keyboards.crypting_operation(lang_code)
+    #кнопка, возвращающая ключ сдвига
+    elif btn_data.startswith("5/2/"):
+        operation_type = (btn_data.split('/'))[-1]
+        lang_code = (btn_data.split('/'))[-2]
+        (text, reply_markup) = keyboards.crypting_key(lang_code, operation_type)
+    #кнопка, возвращающая предложение пользователю ввести текст
+    elif btn_data.startswith("5/3/"):
+        flg_need_response = 1
+        operation_type = (btn_data.split('/'))[-1]
+        lang_code = (btn_data.split('/'))[-2]
+        (text, reply_markup) = keyboards.crypting_text(lang_code, operation_type)
+    return text, reply_markup, flg_need_response
 
 
 #ветка кнопок с изучением японского
 def japanese(bot, chat_id, btn_data):
     (text, reply_markup) = keyboards.japanese_main()
     return text, reply_markup
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #ветка кнопок с донатом
 def donat(bot, chat_id, btn_data):

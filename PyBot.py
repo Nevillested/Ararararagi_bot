@@ -62,7 +62,10 @@ def start_message(message):
                 
                 #проверяем о чем вообще шла речь, для этого заберем ID последней нажатой кнопки и заодно msg_id, в рамках которого будем редачить сообщение
                 (what_is_current_context, cur_message_id) = queries_to_bd.get_last_pressed_button(message.chat.id)
-                    
+                
+                current_result_text = ''
+                current_reply_markup = telebot.types.InlineKeyboardMarkup()
+                
                 #если последняя нажатая кнопка относится к меню с ID = 4, то это напоминалки. В напоминалках только в 1 месте требуется, чтобы пользователь дал ответ текстом - это при вводе информации, что же нужно напомнить
                 if what_is_current_context.startswith("4"):
                     #создает в таблице запись о напоминалке
@@ -73,10 +76,26 @@ def start_message(message):
                         
                     #забираем клавиатуру для редактирования напоминалки
                     (current_result_text, current_reply_markup) = keyboards.notification_edit(notification_id)
+                
+                #если последняя нажатая кнопка относится к меню с ID = 5, то это шифрование/дешифрование
+                elif what_is_current_context.startswith("5"):
+                    
+                    #вытаскиваем тип операции                    
+                    operation_type = (what_is_current_context.split('/'))[-1]
+                    
+                    #вытаскиваем язык                    
+                    lang_code = (what_is_current_context.split('/'))[-2]
+                    
+                    #вытаскиваем ключ                    
+                    key = (what_is_current_context.split('/'))[-3]
+                    
+                    #отправляем на шифровку/дешифровку
+                    (current_result_text, current_reply_markup) = keyboards.crypting_result(operation_type, lang_code, key, message.text)
                         
-                    #редактируем в конечном итоге само меню для продолжения работы в режиме одного меню
-                    MypyBot.edit_message_text(chat_id = message.chat.id, message_id = cur_message_id, text = current_result_text, reply_markup = current_reply_markup)
-            
+                        
+                #редактируем в конечном итоге само меню для продолжения работы в режиме одного меню
+                MypyBot.edit_message_text(chat_id = message.chat.id, message_id = cur_message_id, text = current_result_text, reply_markup = current_reply_markup)
+                
             #иначе заглушка
             else:
             

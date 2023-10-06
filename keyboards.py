@@ -340,21 +340,118 @@ def notif_turn_on_off(notification_id):
     reply_to = create_inline_kb(keyboard_dict, cnt_object_in_row)
     return text, reply_to
 
+############################# клавиатуры с шифрованием и дешифрованием #############################
 
-
-
-
-
-
-
-
-#клавиатура основного меню шифрования / дешифрования
-def encrypting_main():
-    text = 'Шифрование / дешифрование текста'
-    cnt_object_in_row = 0
-    dict_of_buttons = {}
+#выбора языка
+def crypting_lang():
+    text = 'Выбери язык'
+    cnt_object_in_row = 2
+    dict_of_buttons = {"Русский" : "5/1/RU", "English" : "5/1/EN", "Назад" : "5/back/0"}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
+
+#выбор типа операции
+def crypting_operation(lang_code):
+    text = 'Шифрование / дешифрование текста. Язык - ' + lang_code
+    cnt_object_in_row = 2
+    dict_of_buttons = {"Зашифровать" : "5/2/" + lang_code + "/encrypt", "Расшифровать" : "5/2/" + lang_code + "/decrypt", "Назад" : "5/back/1"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
+
+#выбор ключа сдвига
+def crypting_key(lang_code, operation_type):
+    cnt_object_in_row = 5
+    text = ''
+    if operation_type == "encrypt":
+        text = 'Выбери ключ для шифрования'
+    elif operation_type == "decrypt":
+        text = 'Выбери ключ для дешифрования'
+    dict_of_buttons = {}
+    for i in range(1, 15):
+        dict_of_buttons[i] = "5/3/" + str(i) + "/"+ lang_code + "/" + operation_type
+
+    dict_of_buttons["Назад"] = "5/back/2/" + lang_code
+
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
+
+#предложение пользователю ввести текст для шифровки или дешифровки
+def crypting_text(lang_code, operation_type):
+    reply_to = types.InlineKeyboardMarkup()
+    text = ''
+    if lang_code == 'RU' and operation_type == "encrypt":
+        text = 'Введи текст на русском языке, который хочешь зашифровать\nПринимаются только символы и русские буквы'
+    elif lang_code == 'RU' and operation_type == "decrypt":
+        text = 'Введи текст на русском языке, который хочешь расшифровать\nПринимаются только символы и русские буквы'
+    elif lang_code == 'EN' and operation_type == "encrypt":
+        text = 'Введи текст на английском языке, который хочешь зашифровать\nПринимаются только символы и английские буквы'
+    elif lang_code == 'EN' and operation_type == "decrypt":
+        text = 'Введи текст на английском языке, который хочешь расшифровать\nПринимаются только символы и английские буквы'
+    reply_to = create_inline_kb({"Назад" : "5/back/2/" + lang_code}, 1)
+    return text, reply_to
+
+#сама шифровка или дешифровка текста
+def crypting_result(operation_type, lang_code, key, text_to_oper):
+    reply_to = types.InlineKeyboardMarkup()
+    cnt_abc = 0
+    alphabet = ''
+    text_out = ''
+
+    print('text_to_oper ' + text_to_oper)
+
+    if lang_code == 'RU':
+        cnt_abc = 32
+        alphabet = 'азокщцчспфнхгъбыуьмивтяерйюжэлшд'
+    if lang_code == 'EN':
+        cnt_abc = 26
+        alphabet = 'yvhzkaucsoqigjxbnfdptrlwme'
+
+    if operation_type == 'encrypt':
+
+        for chr in text_to_oper:
+
+            index_in_abc = alphabet.find(chr)
+
+            if index_in_abc > 0:
+
+                new_index_in_abc = index_in_abc + int(key)
+
+                if new_index_in_abc > cnt_abc:
+
+                    new_index_in_abc = new_index_in_abc - cnt_abc
+
+                text_out += alphabet[new_index_in_abc]
+
+            else:
+                text_out += chr
+
+        text_out = 'Зашифрованный текст:\n' + text_out
+
+    elif operation_type == 'decrypt':
+
+        for chr in text_to_oper:
+
+            index_in_abc = alphabet.find(chr)
+
+            if index_in_abc > 0:
+
+                new_index_in_abc = index_in_abc - int(key)
+
+                if new_index_in_abc < 0:
+
+                    new_index_in_abc = new_index_in_abc + cnt_abc
+
+                text_out += alphabet[new_index_in_abc]
+
+            else:
+                text_out += chr
+
+        text_out = 'Расшифрованный текст:\n' + text_out
+
+    reply_to = create_inline_kb({"Назад" : "5/back/2/" + lang_code}, 1)
+    return text_out, reply_to
+
+############################# клавиатуры с изучением японского #############################
 
 #клавиатура основного меню изучения японского
 def japanese_main():
@@ -363,6 +460,30 @@ def japanese_main():
     dict_of_buttons = {}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #клавиатура основного меню доната
 def donat_main():
