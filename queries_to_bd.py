@@ -88,6 +88,23 @@ def save_simple_message(data_from_message):
     )
     """)
 
+#сохраняет входящую инфу о нажатой пользователем кнопке
+def save_callback_query(call):
+    cur.execute("""
+    INSERT INTO arabot.income_callback_query
+    (
+     chat_id,
+     message_id,
+     button_id
+    )
+    VALUES
+    (
+     """ + str(call.message.chat.id) + """,
+     """ + str(call.message.message_id) + """,
+     '""" + str(call.data) + """'
+    )""")
+
+
 #добавляет новую версию сообщения
 def insert_new_smiple_message_ver(data_from_message):
     chat_id = str(data_from_message.chat.id)
@@ -124,12 +141,7 @@ def insert_new_smiple_message_ver(data_from_message):
     """)
 
 #сохраняет исходящие сообщения меню по нажатии пользователем на кнопку
-def save_outcome_data(chat_id, msg_id, msg_type, text, flg_main_menu = None):
-    activity_menu_flg = ''
-    if flg_main_menu == None:
-        activity_menu_flg = '0'
-    else:
-        activity_menu_flg = '1'
+def save_outcome_data(chat_id, msg_id, msg_type, text, flg_main_menu, flg_need_response):
     cur.execute("""
     INSERT INTO arabot.outcome_data
     (
@@ -137,15 +149,17 @@ def save_outcome_data(chat_id, msg_id, msg_type, text, flg_main_menu = None):
      message_id,
      message_type,
      activity_menu_flg,
-     text_to_user
+     text_to_user,
+     flg_need_response
     )
     values
     (
      """ + str(chat_id) + """,
      """ + str(msg_id + 1) + """,
-     '""" + msg_type + """',
-     """ + activity_menu_flg + """,
-     '""" + str(text) + """'
+     '""" + str(msg_type) + """',
+     """ + str(flg_main_menu) + """,
+     '""" + str(text) + """',
+     """ + str(flg_need_response) + """
     )
     """)
 
@@ -306,3 +320,202 @@ def get_first_char_preformer_id_by_performer_id(performer_id):
     result_tuple = cur.fetchone()
     result_string = result_tuple[0]
     return result_string
+
+#выдает словарь всех существующих подписок в словаре
+def get_dict_of_full_subs():
+    cur.execute("""
+    SELECT id,
+           descr
+      FROM arabot.dict_subscriptions;
+    """)
+    rows = cur.fetchall()
+    subs_dict = {}
+    for item in rows:
+        subs_dict[item[1]] = '3/main_subs_' + str(item[0])
+    return subs_dict
+
+#проверяет подписывался ли когда-нибудь юзер на эту подписку
+def check_subs_of_user_by_subs_id(subscription_id, chat_id):
+    cur.execute("""
+    SELECT count(*)
+      FROM arabot.user_subscriptions
+     WHERE chat_id = """ + str(chat_id) + """
+       AND subscription_id = """ + str(subscription_id) + """;
+    """)
+    result_tuple = cur.fetchone()
+    result_int = int(result_tuple[0])
+    return result_int
+
+#проверяет статус подписки
+def get_status_of_subscription(subscription_id, chat_id):
+    cur.execute("""
+    SELECT activity_flg
+      FROM arabot.user_subscriptions
+     WHERE chat_id = """ + str(chat_id) + """
+      AND subscription_id = """ + str(subscription_id) + """;
+    """)
+    result_tuple = cur.fetchone()
+    result_int = int(result_tuple[0])
+    return result_int
+
+#добавляет пользователя и id подписки в таблицу с подписками
+def add_to_subscriptions(chat_id, subscription_id):
+    cur.execute("""
+    INSERT INTO arabot.user_subscriptions
+    (
+     chat_id,
+     subscription_id,
+     activity_flg
+    )
+    VALUES
+    (
+     """ + str(chat_id) + """,
+     """ + str(subscription_id) + """,
+     0
+    );
+    """)
+
+#обновляет статус подписки
+def update_subscription(chat_id, subscription_id, status):
+    cur_text = """
+    UPDATE arabot.user_subscriptions
+       SET activity_flg = """ + str(status) + """,
+           dt_upd = current_timestamp
+     WHERE chat_id = """ + str(chat_id) + """
+       AND subscription_id = """ + str(subscription_id) + """;
+    """
+    cur.execute(cur_text)
+
+#получает все текущие напоминалки пользователя
+def get_current_notifications(chat_id):
+    cur.execute("""
+    SELECT id,
+           notif_name
+      FROM arabot.notifications;
+    """)
+    rows = cur.fetchall()
+    subs_dict = {}
+    for item in rows:
+        subs_dict[item[1]] = '4/1/' + str(item[0])
+    return subs_dict
+
+#проверяет в бд, должен ли пользователем сейчас отвечать текстом или нет
+def check_need_response_flg(chat_id):
+    cur.execute("""
+    SELECT flg_need_response
+      FROM arabot.outcome_data
+     WHERE chat_id = """ + str(chat_id) + """
+     ORDER BY id desc
+     LIMIT 1
+    """)
+    result_tuple = cur.fetchone()
+    flg_need_response = int(result_tuple[0])
+    return flg_need_response
+
+#возаращает ID последней нажатой кнопки
+def get_last_pressed_button(chat_id):
+    cur.execute("""
+    SELECT button_id,
+           message_id
+      FROM arabot.income_callback_query
+     WHERE chat_id = """ + str(chat_id) + """
+     ORDER BY id desc
+     LIMIT 1
+    """)
+    result_tuple = cur.fetchone()
+    button_id = str(result_tuple[0])
+    message_id = int(result_tuple[1])
+    return button_id, message_id
+
+#создает новую напоминалку
+def create_new_notification(chat_id, notif_name):
+    cur.execute("""
+    INSERT INTO arabot.notifications
+    (
+     chat_id,
+     notif_name
+    )
+    VALUES
+    (
+     """ + str(chat_id) + """,
+     '""" + str(notif_name) + """'
+    );
+    """)
+
+#получает id последней созданной напоминалки
+def get_last_notification_id(chat_id):
+    cur.execute("""
+    SELECT id
+      FROM arabot.notifications
+     WHERE chat_id = """ + str(chat_id) + """
+     ORDER BY dt_created desc
+     LIMIT 1
+    """)
+    result_tuple = cur.fetchone()
+    result_str = str(result_tuple[0])
+    return result_str
+
+#получает значение из заданного поля по id напоминалки
+def get_value_from_notification(notification_id, value):
+    cur.execute("""
+    SELECT """ + value + """
+      FROM arabot.notifications
+     WHERE id = """ + notification_id + """
+    """)
+    result_tuple = cur.fetchone()
+    result_str = str(result_tuple[0])
+    return result_str
+
+#обновляет данные в таблице с напоминалками
+def update_notfications(notification_id, target_field, target_value, repeat_flg):
+
+    cursor_text = """
+    UPDATE arabot.notifications
+       SET dt_updated = current_timestamp,
+           """ + str(target_field)  + """ = """ + str(target_value) + """
+     WHERE id = """ + str(notification_id) + """;
+    """
+
+    if repeat_flg == 0:
+        cursor_text = """
+        UPDATE arabot.notifications
+           SET dt_updated = current_timestamp,
+               repeat_flg = 0
+         WHERE id = """ + str(notification_id) + """;
+        """
+    elif repeat_flg == 1:
+        cursor_text = """
+        UPDATE arabot.notifications
+           SET dt_updated = current_timestamp,
+               """ + str(target_field)  + """ = """ + str(target_value) + """,
+               repeat_flg = 1
+         WHERE id = """ + str(notification_id) + """;
+        """
+
+    cur.execute(cursor_text)
+
+#обнуляет всевозмодные варианты повторов
+def notification_reset_repeat(notification_id):
+    cur.execute("""
+    UPDATE arabot.notifications
+       SET dt_updated = current_timestamp,
+           repeat_flg = NULL,
+           every_year_flg = NULL,
+           every_month_flg = NULL,
+           every_week_flg = NULL,
+           every_day_flg = NULL,
+           every_hour_flg = NULL,
+           every_minute_flg = NULL
+     WHERE id = """ + str(notification_id) + """;
+    """)
+
+#получает статус напоминалки. Включена или нет
+def get_status_of_notification(notification_id):
+    cur.execute("""
+    SELECT activity_flg
+      FROM arabot.notifications
+     WHERE id = """ + notification_id + """
+    """)
+    result_tuple = cur.fetchone()
+    result_str = str(result_tuple[0])
+    return result_str

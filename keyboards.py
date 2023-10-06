@@ -1,6 +1,8 @@
 from telebot import types
 import my_cfg
 import queries_to_bd
+import datetime
+import calendar
 
 #метод для создания инлайн-клавиатуры. На вход получает словарь из пары "ид кнопки-название кнопки" и количество кнопок в строке, а на выходе отдает саму клавиатуру
 def create_inline_kb(dict_of_buttons, cnt_object_in_row):
@@ -15,7 +17,7 @@ def create_inline_kb(dict_of_buttons, cnt_object_in_row):
     reply_to.add(*row)
     return reply_to
 
-#клавиатура основного меню
+############################# клавиатура основного меню #############################
 def main_menu(chat_id):
     text = 'Главное меню'
     cnt_object_in_row = 3
@@ -25,7 +27,8 @@ def main_menu(chat_id):
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 
-#клавиатура основного меню Шинобу
+############################# клавиатуры Шинобу #############################
+#главное меню Шинобу
 def shinobu_main():
     text = 'Shinobu is the best girl'
     cnt_object_in_row = 2
@@ -49,7 +52,8 @@ def shinobu_stick():
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 
-#клавиатура основного меню музыки (первый символ исполнителя)
+############################# клавиатуры музыки #############################
+#клавиатура первого символа исполнителя
 def music_abc():
     text = 'Выбери символ, с которого начинается название исполнителя'
     cnt_object_in_row = 5
@@ -98,30 +102,251 @@ def music_menu_last(flg_success_size, song_id):
     reply_to = create_inline_kb({"Назад" : "2/back_1/" + song_id}, 1)
     return text, reply_to
 
-
-
-
-
-
-
-
-
-
+############################# клавиатуры подписок #############################
 #клавиатура основного меню подписок
 def subscriptions_main():
-    text = 'Управление подписками'
-    cnt_object_in_row = 0
-    dict_of_buttons = {}
+    text = 'Подписки на рассылки'
+    cnt_object_in_row = 2
+    dict_of_buttons = queries_to_bd.get_dict_of_full_subs()
+    dict_of_buttons["Назад"] = "3/back_main"
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
+
+#клавиатура статуса подписки и предложением включить или выключит подписку
+def subscriptions_cur_status(activity_flg, subscription_id):
+    cnt_object_in_row = 1
+    text = ''
+    dict_of_buttons = {}
+    if activity_flg == 1:
+        text = 'Подписка активна, отключить?'
+        dict_of_buttons["Да, отключить"] = "3/turn_off/" + subscription_id
+    else:
+        text = 'Подписка не активна, включить?'
+        dict_of_buttons["Да, включить"] = "3/turn_on/" + subscription_id
+    dict_of_buttons["Назад"] = "3/back_subs"
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
+
+#клавиатура с результатом выключения или включения подписки и возвратом на основное меню подписок
+def subscription_result(activity_flg):
+    cnt_object_in_row = 1
+    text = ''
+    dict_of_buttons = {"Назад к списку подписок" : "3"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    if activity_flg == 1:
+        text = 'Подписка включена'
+    elif activity_flg == 0:
+        text = 'Подписка отключена'
+    return text, reply_to
+
+############################# клавиатуры напоминалок #############################
 
 #клавиатура основного меню напоминалок
 def notifications_main():
     text = 'Управление напоминалками'
-    cnt_object_in_row = 0
-    dict_of_buttons = {}
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Текущие напоминалки" : "4/1", "Новая напоминалка" : "4/2", "Назад" : "4/3"}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
+
+#клавиатура с текущими напоминалками пользователя
+def notifications_current(chat_id):
+    text = 'Все текущие напоминалки'
+    cnt_object_in_row = 1
+    dict_of_buttons = queries_to_bd.get_current_notifications(chat_id)
+    dict_of_buttons["Назад"] = "4/1/back"
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
+
+#Меню редактирования напоминалки
+def notification_edit(notification_id):
+    text = 'Редактирование напоминалки'
+    cnt_object_in_row = 3
+    dict_of_buttons = {"Год" : "4/edit/year_num/" + str(notification_id), "Месяц" : "4/edit/month_num/" + str(notification_id), "День" : "4/edit/day_num/" + str(notification_id), "Час" : "4/edit/hour_num/" + str(notification_id), "Минута" : "4/edit/min_num/" + str(notification_id), "Частота повтора" : "4/edit/repeat_interval/" + str(notification_id),"Вкл/выкл" : "4/edit/activity/" + str(notification_id), "Назад к напоминалкам" : "4"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
+
+#клавиатура выбора года старта напоминалки
+def notif_years(notification_id):
+    text = 'Год напоминалки'
+    cnt_object_in_row = 3
+    current_year = datetime.datetime.now().year
+    keyboard_dict = {}
+    for i in range(10):
+        dict_key = '4/set/year_num/' + str(current_year + i) + '/' + notification_id
+        dict_value = str(current_year + i)
+        keyboard_dict[dict_value] = dict_key
+    keyboard_dict["Назад"] = "4/1/" + notification_id
+    reply_to = create_inline_kb(keyboard_dict, cnt_object_in_row)
+    return text, reply_to
+
+#клавиатура выбора месяца старта напоминалки
+def notif_months(notification_id):
+    selected_year = queries_to_bd.get_value_from_notification(notification_id, 'year_num')
+    text = ''
+    keyboard_dict = {}
+    cnt_object_in_row = 4
+    dict_month = {"1":"Январь","2":"Февраль","3":"Март","4":"Апрель","5":"Май","6":"Июнь","7":"Июль","8":"Август","9":"Сентябрь","10":"Октябрь","11":"Ноябрь","12":"Декабрь"}
+    if selected_year == 'None':
+        text = 'Сначала надо выбрать год'
+    else:
+        text = 'Месяц напоминалки'
+        current_month = datetime.datetime.now().month
+        if str(datetime.datetime.now().year) == selected_year:
+            for item in dict_month:
+                if int(item) >= int(current_month):
+                    dict_key = '4/set/month_num/' + str(item) + '/' + notification_id
+                    dict_value = dict_month[item]
+                    keyboard_dict[dict_value] = dict_key
+        else:
+            for item in dict_month:
+                dict_key = '4/set/month_num/' + str(item) + '/' + notification_id
+                dict_value = dict_month[item]
+                keyboard_dict[dict_value] = dict_key
+    keyboard_dict["Назад"] = "4/1/" + notification_id
+    reply_to = create_inline_kb(keyboard_dict, cnt_object_in_row)
+    return text, reply_to
+
+#клавиатура выбора дня старта напоминалки
+def notif_days(notification_id):
+    selected_year = queries_to_bd.get_value_from_notification(notification_id, 'year_num')
+    selected_month = queries_to_bd.get_value_from_notification(notification_id, 'month_num')
+    text = ''
+    keyboard_dict = {}
+    cnt_object_in_row = 4
+    if selected_month == 'None':
+        text = 'Сначала надо выбрать месяц'
+    else:
+        text = 'День напоминалки'
+        current_year = str(datetime.datetime.now().year)
+        current_month = str(datetime.datetime.now().month)
+        day_start = 1
+        day_end = calendar.monthrange(int(selected_year), int(selected_month))[1]
+        if current_year == selected_year and current_month == selected_month:
+            day_start = datetime.datetime.now().day
+
+        for i in range(int(day_start), int(day_end) + 1):
+            dict_key = '4/set/day_num/' + str(i) + '/' + notification_id
+            dict_value = str(i)
+            keyboard_dict[dict_value] = dict_key
+    keyboard_dict["Назад"] = "4/1/" + notification_id
+    reply_to = create_inline_kb(keyboard_dict, cnt_object_in_row)
+    return text, reply_to
+
+#клавиатура выбора часа старта напоминалки
+def notif_hours(notification_id):
+    selected_year = queries_to_bd.get_value_from_notification(notification_id, 'year_num')
+    selected_month = queries_to_bd.get_value_from_notification(notification_id, 'month_num')
+    selected_day = queries_to_bd.get_value_from_notification(notification_id, 'day_num')
+    text = ''
+    keyboard_dict = {}
+    cnt_object_in_row = 4
+    if selected_day == 'None':
+        text = 'Сначала надо выбрать день'
+    else:
+        text = 'День напоминалки'
+        current_year = str(datetime.datetime.now().year)
+        current_month = str(datetime.datetime.now().month)
+        current_day = str(datetime.datetime.now().day)
+        hour_start = 0
+        if current_year == selected_year and current_month == selected_month and current_day == selected_day:
+            hour_start = datetime.datetime.now().hour
+
+        for i in range(int(hour_start), 24):
+            dict_key = '4/set/hour_num/' + str(i) + '/' + notification_id
+            dict_value = str(i)
+            keyboard_dict[dict_value] = dict_key
+    keyboard_dict["Назад"] = "4/1/" + notification_id
+    reply_to = create_inline_kb(keyboard_dict, cnt_object_in_row)
+    return text, reply_to
+
+#клавиатура выбора часа старта напоминалки
+def notif_minutes(notification_id):
+    selected_year = queries_to_bd.get_value_from_notification(notification_id, 'year_num')
+    selected_month = queries_to_bd.get_value_from_notification(notification_id, 'month_num')
+    selected_day = queries_to_bd.get_value_from_notification(notification_id, 'day_num')
+    selected_hour = queries_to_bd.get_value_from_notification(notification_id, 'hour_num')
+    text = ''
+    keyboard_dict = {}
+    cnt_object_in_row = 4
+    if selected_day == 'None':
+        text = 'Сначала надо выбрать час'
+    else:
+        text = 'День напоминалки'
+        current_year = str(datetime.datetime.now().year)
+        current_month = str(datetime.datetime.now().month)
+        current_day = str(datetime.datetime.now().day)
+        current_hour = str(datetime.datetime.now().hour)
+        min_start = 0
+        if current_year == selected_year and current_month == selected_month and current_day == selected_day and current_hour == selected_hour:
+            min_start = datetime.datetime.now().minute
+        for i in range(min_start + 1, 60):
+            dict_key = '4/set/minute_num/' + str(i) + '/' + notification_id
+            dict_value = str(i)
+            keyboard_dict[dict_value] = dict_key
+    keyboard_dict["Назад"] = "4/1/" + notification_id
+    reply_to = create_inline_kb(keyboard_dict, cnt_object_in_row)
+    return text, reply_to
+
+#клавиатура с выбором периодичности повтора
+def notif_repeat_interval(notification_id):
+    text = 'Периодичность повтора'
+    cnt_object_in_row = 3
+    keyboard_dict = {"Ежегодно" : "4/set/every_year_flg/1/" + str(notification_id),
+                     "Ежемесячно" : "4/set/every_month_flg/1/" + str(notification_id),
+                     "Еженедельно" : "4/set/every_week_flg/1/" + str(notification_id),
+                     "Ежедневно" : "4/set/every_day_flg/1/" + str(notification_id),
+                     "Ежечасно" : "4/set/every_hour_flg/1/" + str(notification_id),
+                     "Ежеминутно" : "4/set/every_minute_flg/1/" + str(notification_id),
+                     "Не повторять" : "4/set/repeat_flg/0/" + str(notification_id)
+                    }
+    keyboard_dict["Назад"] = "4/1/" + notification_id
+    reply_to = create_inline_kb(keyboard_dict, cnt_object_in_row)
+    return text, reply_to
+
+#выдает клавиатуру со статусом напоминалки и предложением включить или выключить ее
+def notif_turn_on_off(notification_id):
+    text = ''
+    cnt_object_in_row = 3
+    keyboard_dict = {}
+    selected_year = queries_to_bd.get_value_from_notification(notification_id, 'year_num')
+    selected_month = queries_to_bd.get_value_from_notification(notification_id, 'month_num')
+    selected_day = queries_to_bd.get_value_from_notification(notification_id, 'day_num')
+    selected_hour = queries_to_bd.get_value_from_notification(notification_id, 'hour_num')
+    selected_minute = queries_to_bd.get_value_from_notification(notification_id, 'minute_num')
+    selected_repeat_flg = queries_to_bd.get_value_from_notification(notification_id, 'repeat_flg')
+    if str(selected_year) == 'None' or  str(selected_month) == 'None' or  str(selected_day) == 'None' or  str(selected_hour) == 'None' or  str(selected_minute) == 'None' or  str(selected_repeat_flg) == 'None':
+        if str(selected_year) == 'None':
+            text = 'Необходимо указать год!'
+        if str(selected_month) == 'None':
+            text = 'Необходимо указать месяц!'
+        if str(selected_day) == 'None':
+            text = 'Необходимо указать день!'
+        if str(selected_hour) == 'None':
+            text = 'Необходимо указать час!'
+        if str(selected_minute) == 'None':
+            text = 'Необходимо указать минуту!'
+        if str(selected_repeat_flg) == 'None':
+            text = 'Необходимо указать периодичность повтора!'
+    else:
+        status = queries_to_bd.get_status_of_notification(notification_id)
+        if status == '0':
+            text = 'На текущий момент напоминалка выключена.\nВключить?'
+            keyboard_dict = {"Да, включить" : "4/set/activity_flg/1/" + str(notification_id)}
+        elif status == '1':
+            text = 'На текущий момент напоминалка включена.\nОтключить?'
+            keyboard_dict = {"Да, выключить" : "4/set/activity_flg/0/" + str(notification_id)}
+    keyboard_dict["Назад"] = "4/1/" + notification_id
+    reply_to = create_inline_kb(keyboard_dict, cnt_object_in_row)
+    return text, reply_to
+
+
+
+
+
+
+
+
 
 #клавиатура основного меню шифрования / дешифрования
 def encrypting_main():

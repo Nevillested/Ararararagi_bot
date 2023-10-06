@@ -30,7 +30,7 @@ def send_shinobu_pic(bot, chat_id, msg_id):
 
     bot.send_photo(chat_id, photo = open(img_dir, 'rb'), has_spoiler = True)
 
-    queries_to_bd.save_outcome_data(chat_id, msg_id, 'photo', img_dir)
+    queries_to_bd.save_outcome_data(chat_id, msg_id, 'photo', img_dir, 0, 0)
 
 ############################### отправляет рандомный стикер с Шинобу из имеющегося локально набора стикеров ###############################
 def send_shinobu_stick(bot, chat_id, msg_id):
@@ -41,7 +41,7 @@ def send_shinobu_stick(bot, chat_id, msg_id):
 
     bot.send_sticker(chat_id, sticker = open(sticker_dir, "rb"))
 
-    queries_to_bd.save_outcome_data(chat_id, msg_id, 'sticker', sticker_dir)
+    queries_to_bd.save_outcome_data(chat_id, msg_id, 'sticker', sticker_dir, 0, 0)
 
 ############################### подготовка данных по музыке ###############################
 

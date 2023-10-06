@@ -19,7 +19,7 @@ CONTENT_TYPES = ["text", "audio", "document", "photo", "sticker", "video", "vide
 #хэндер простых сообщений   
 @MypyBot.message_handler(content_types=CONTENT_TYPES)
 def start_message(message):
-    #try:
+    try:
         print(f"Пришло сообщение от: {message.from_user.username}\nТип сообщения: {str(message.content_type)}\nТекст сообщения: {message.text}\n")
             
         #проверяет пользователя в бд, если есть-обновляет данные, если нет-добавляет данные
@@ -51,18 +51,39 @@ def start_message(message):
             MypyBot.send_message(message.chat.id, text_out, reply_markup = reply_markup_out, parse_mode = 'MarkdownV2')
             
             #сохраняет данные
-            queries_to_bd.save_outcome_data(message.chat.id, message.message_id, 'menu', text_out, 1)
+            queries_to_bd.save_outcome_data(message.chat.id, message.message_id, 'menu', text_out, 1, 0)
             
         else:
-            text_out = '``` Для вызова меню используйте команду /menu ```'
+            #проверяем, задал ли бот вопрос пользователю, на который он обязательно должен ответить текстом в чате
+            flg_need_response = queries_to_bd.check_need_response_flg(message.chat.id)
             
-            MypyBot.send_message(message.chat.id, text_out, parse_mode = 'MarkdownV2')
+            #если на последнее меню бота нужно обязательно ответить текстовым сообщением, то...
+            if flg_need_response == 1:
+                
+                #проверяем о чем вообще шла речь, для этого заберем ID последней нажатой кнопки и заодно msg_id, в рамках которого будем редачить сообщение
+                (what_is_current_context, cur_message_id) = queries_to_bd.get_last_pressed_button(message.chat.id)
+                    
+                #если последняя нажатая кнопка относится к меню с ID = 4, то это напоминалки. В напоминалках только в 1 месте требуется, чтобы пользователь дал ответ текстом - это при вводе информации, что же нужно напомнить
+                if what_is_current_context.startswith("4"):
+                    #создает в таблице запись о напоминалке
+                    queries_to_bd.create_new_notification(message.chat.id, message.text)
+                        
+                    #забирает ID созданной записи (напоминалки)
+                    notification_id = queries_to_bd.get_last_notification_id(message.chat.id)
+                        
+                    #забираем клавиатуру для редактирования напоминалки
+                    (current_result_text, current_reply_markup) = keyboards.notification_edit(notification_id)
+                        
+                    #редактируем в конечном итоге само меню для продолжения работы в режиме одного меню
+                    MypyBot.edit_message_text(chat_id = message.chat.id, message_id = cur_message_id, text = current_result_text, reply_markup = current_reply_markup)
             
-            #сохраняет данные
-            queries_to_bd.save_outcome_data(message.chat.id, message.message_id, 'text', text_out)
+            #иначе заглушка
+            else:
             
-    #except Exception as e:
-        #print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
+                MypyBot.send_message(message.chat.id,  '``` Для вызова меню используйте команду /menu ```', parse_mode = 'MarkdownV2')
+            
+    except Exception as e:
+        print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
 
 #хэндлер редактирования сообщений
 @MypyBot.edited_message_handler(content_types="text")
@@ -83,6 +104,10 @@ def callback_inline(call):
         
         print(f"{call.from_user.username} нажал кнопку {call.data}.\n")
         
+        #сохраняем инфо о нажатой пользователем кнопке
+        queries_to_bd.save_callback_query(call)
+        
+        #уходим в кейсы всевозможных кнопок
         callback_query_cases.case_main(call, MypyBot)
         
     #except Exception as e:
