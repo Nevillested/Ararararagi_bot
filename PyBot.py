@@ -119,7 +119,7 @@ def catch_edit_msg(message):
 #хэндлер нажатий на кнопки
 @MypyBot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
-    #try:
+    try:
         
         print(f"{call.from_user.username} нажал кнопку {call.data}.\n")
         
@@ -129,7 +129,7 @@ def callback_inline(call):
         #уходим в кейсы всевозможных кнопок
         callback_query_cases.case_main(call, MypyBot)
         
-    #except Exception as e:
-        #print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
+    except Exception as e:
+        print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
 
 MypyBot.polling(none_stop=True)

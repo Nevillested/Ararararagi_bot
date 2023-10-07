@@ -3,6 +3,7 @@ import my_cfg
 import queries_to_bd
 import datetime
 import calendar
+import common_methods
 
 #метод для создания инлайн-клавиатуры. На вход получает словарь из пары "ид кнопки-название кнопки" и количество кнопок в строке, а на выходе отдает саму клавиатуру
 def create_inline_kb(dict_of_buttons, cnt_object_in_row):
@@ -367,7 +368,7 @@ def crypting_key(lang_code, operation_type):
     elif operation_type == "decrypt":
         text = 'Выбери ключ для дешифрования'
     dict_of_buttons = {}
-    for i in range(1, 15):
+    for i in range(1, 100):
         dict_of_buttons[i] = "5/3/" + str(i) + "/"+ lang_code + "/" + operation_type
 
     dict_of_buttons["Назад"] = "5/back/2/" + lang_code
@@ -393,61 +394,7 @@ def crypting_text(lang_code, operation_type):
 #сама шифровка или дешифровка текста
 def crypting_result(operation_type, lang_code, key, text_to_oper):
     reply_to = types.InlineKeyboardMarkup()
-    cnt_abc = 0
-    alphabet = ''
-    text_out = ''
-
-    print('text_to_oper ' + text_to_oper)
-
-    if lang_code == 'RU':
-        cnt_abc = 32
-        alphabet = 'азокщцчспфнхгъбыуьмивтяерйюжэлшд'
-    if lang_code == 'EN':
-        cnt_abc = 26
-        alphabet = 'yvhzkaucsoqigjxbnfdptrlwme'
-
-    if operation_type == 'encrypt':
-
-        for chr in text_to_oper:
-
-            index_in_abc = alphabet.find(chr)
-
-            if index_in_abc > 0:
-
-                new_index_in_abc = index_in_abc + int(key)
-
-                if new_index_in_abc > cnt_abc:
-
-                    new_index_in_abc = new_index_in_abc - cnt_abc
-
-                text_out += alphabet[new_index_in_abc]
-
-            else:
-                text_out += chr
-
-        text_out = 'Зашифрованный текст:\n' + text_out
-
-    elif operation_type == 'decrypt':
-
-        for chr in text_to_oper:
-
-            index_in_abc = alphabet.find(chr)
-
-            if index_in_abc > 0:
-
-                new_index_in_abc = index_in_abc - int(key)
-
-                if new_index_in_abc < 0:
-
-                    new_index_in_abc = new_index_in_abc + cnt_abc
-
-                text_out += alphabet[new_index_in_abc]
-
-            else:
-                text_out += chr
-
-        text_out = 'Расшифрованный текст:\n' + text_out
-
+    text_out = common_methods.encrypting_decrypting(operation_type, lang_code, key, text_to_oper)
     reply_to = create_inline_kb({"Назад" : "5/back/2/" + lang_code}, 1)
     return text_out, reply_to
 

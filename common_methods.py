@@ -91,3 +91,60 @@ def prepare_music_data():
 
     #раскомментировать, если появится новая музыка по директории '/home/duck/Documents/GitHub/arabot_dev/assets/music'
     #queries_to_bd.gen_music_data(list_data_of_music_files)
+
+############################### Метод шифрования и дешифрования ###############################
+def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):
+    cnt_abc = 0
+    alphabet = ''
+    text_out = ''
+    text_to_oper = text_to_oper.lower()
+    if lang_code == 'RU':
+        cnt_abc = 32
+        alphabet = 'азокщцчспфнхгъбыуьмивтяерйюжэлшд'
+    if lang_code == 'EN':
+        cnt_abc = 26
+        alphabet = 'yvhzkaucsoqigjxbnfdptrlwme'
+
+    if operation_type == 'encrypt':
+
+        for chr in text_to_oper:
+
+            index_in_abc = alphabet.find(chr)
+
+            if index_in_abc > 0:
+
+                new_index_in_abc = index_in_abc + int(key)
+
+                if new_index_in_abc > cnt_abc:
+
+                    new_index_in_abc = new_index_in_abc % cnt_abc# new_index_in_abc - cnt_abc
+
+                text_out += alphabet[new_index_in_abc]
+
+            else:
+                text_out += chr
+
+        text_out = 'Зашифрованный текст:\n' + text_out
+
+    elif operation_type == 'decrypt':
+
+        for chr in text_to_oper:
+
+            index_in_abc = alphabet.find(chr)
+
+            if index_in_abc > 0:
+
+                new_index_in_abc = index_in_abc - int(key)
+
+                if new_index_in_abc < 0:
+
+                    new_index_in_abc = cnt_abc -(- new_index_in_abc % cnt_abc)
+
+                text_out += alphabet[new_index_in_abc]
+
+            else:
+                text_out += chr
+
+        text_out = 'Расшифрованный текст:\n' + text_out
+
+    return text_out
