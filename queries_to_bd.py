@@ -155,7 +155,7 @@ def save_outcome_data(chat_id, msg_id, msg_type, text, flg_main_menu, flg_need_r
     values
     (
      """ + str(chat_id) + """,
-     """ + str(msg_id + 1) + """,
+     """ + str(msg_id) + """,
      '""" + str(msg_type) + """',
      """ + str(flg_main_menu) + """,
      '""" + str(text) + """',
@@ -177,14 +177,12 @@ def get_msg_of_open_menu(chat_id):
         array_messages.append(item[0])
     return array_messages
 
-#запоминает, в рамках каких msg_id были закрыты главные меню
-def close_old_opening_menu(chat_id, array_msg_id):
-    for msg in array_msg_id:
-        cur.execute("""
-        update arabot.outcome_data
-           set activity_menu_flg = 0
-         where chat_id = """ + str(chat_id) + """
-           and message_id = """ + str(msg) + """
+#обновляем, что нет активных меню в текущий момент
+def close_old_opening_menu(chat_id):
+    cur.execute("""
+    update arabot.outcome_data
+       set activity_menu_flg = 0
+    where chat_id = """ + str(chat_id) + """
     """)
 
 #получает последнее сообщение, которое отправил пользователю и немного редактирует его. В данном случае - добавляет восклицательный знак.
@@ -409,14 +407,16 @@ def check_need_response_flg(chat_id):
      LIMIT 1
     """)
     result_tuple = cur.fetchone()
-    flg_need_response = int(result_tuple[0])
+    flg_need_response = 0
+    if result_tuple:
+        flg_need_response = int(result_tuple[0])
     return flg_need_response
 
 #возаращает ID последней нажатой кнопки
 def get_last_pressed_button(chat_id):
+    #забираем последний BUTTON ID
     cur.execute("""
-    SELECT button_id,
-           message_id
+    SELECT button_id
       FROM arabot.income_callback_query
      WHERE chat_id = """ + str(chat_id) + """
      ORDER BY id desc
@@ -424,7 +424,18 @@ def get_last_pressed_button(chat_id):
     """)
     result_tuple = cur.fetchone()
     button_id = str(result_tuple[0])
-    message_id = int(result_tuple[1])
+
+    cur.execute("""
+    SELECT message_id
+      FROM arabot.outcome_data
+     WHERE chat_id = """ + str(chat_id) + """
+     ORDER BY id desc
+     LIMIT 1
+    """)
+
+    result_tuple = cur.fetchone()
+    message_id = int(result_tuple[0])
+
     return button_id, message_id
 
 #создает новую напоминалку

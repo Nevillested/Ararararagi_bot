@@ -7,7 +7,7 @@ import queries_to_bd
 import random
 
 ############################### отправляет рандомную пикчу с Шинобу с реактора ###############################
-def send_shinobu_pic(bot, chat_id, msg_id):
+def send_shinobu_pic(bot, chat_id, msg_id_outcome):
     num_page = str(random.randint(1,50))
     page = "https://joyreactor.cc/search/+/" + num_page + "?tags=Oshino+Shinobu%2C+"
     html_page = urllib.request.urlopen(page)
@@ -31,10 +31,14 @@ def send_shinobu_pic(bot, chat_id, msg_id):
 
     bot.send_photo(chat_id, photo = open(img_dir, 'rb'), has_spoiler = True)
 
-    queries_to_bd.save_outcome_data(chat_id, msg_id, 'photo', img_dir, 0, 0)
+    queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'photo', img_dir, 0, 0)
+
+    msg_id_outcome = msg_id_outcome + 1
+
+    return msg_id_outcome
 
 ############################### отправляет рандомный стикер с Шинобу из имеющегося локально набора стикеров ###############################
-def send_shinobu_stick(bot, chat_id, msg_id):
+def send_shinobu_stick(bot, chat_id, msg_id_outcome):
     #не очень красиво, что дирректория прописана вручную, но поправлю позже через os get cwd. Попробуй подключиться, если сможешь:)
     all_stickers_dir = "/home/duck/Documents/GitHub/arabot_dev/assets/stickers/"
 
@@ -42,7 +46,11 @@ def send_shinobu_stick(bot, chat_id, msg_id):
 
     bot.send_sticker(chat_id, sticker = open(sticker_dir, "rb"))
 
-    queries_to_bd.save_outcome_data(chat_id, msg_id, 'sticker', sticker_dir, 0, 0)
+    queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'sticker', sticker_dir, 0, 0)
+
+    msg_id_outcome = msg_id_outcome + 1
+
+    return msg_id_outcome
 
 ############################### подготовка данных по музыке ###############################
 
@@ -125,7 +133,7 @@ def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):
             else:
                 text_out += chr
 
-        text_out = 'Зашифрованный текст:\n' + text_out
+        text_out = 'Зашифрованный текст:\n' + '```' + text_out + '```'
 
     elif operation_type == 'decrypt':
 
@@ -146,13 +154,13 @@ def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):
             else:
                 text_out += chr
 
-        text_out = 'Расшифрованный текст:\n' + text_out
+        text_out = 'Расшифрованный текст:\n' + '```' + text_out + '```'
 
     return text_out
 
 ############################### Метод отправки квизов ###############################
 #это можно было сделать намного лучше, но у меня руки из жопы обращаться со списками, массивами и кортежами
-def send_kanji_quiz_by(bot, chat_id, decade_number = None):
+def send_kanji_quiz_by(bot, chat_id, decade_number, msg_id_outcome):
 
     tuple_of_kanji = queries_to_bd.get_list_of_kanji(decade_number)
 
@@ -186,3 +194,11 @@ def send_kanji_quiz_by(bot, chat_id, decade_number = None):
 
     #отправляем квиз
     bot.send_poll(chat_id, text, options = poll_options_out, correct_option_id  = correct_option_id_out, type = 'quiz')
+
+    #сохраняем данные
+    queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'poll', text, 0, 0)
+
+    #инкрементируем msg_id
+    msg_id_outcome = msg_id_outcome + 1
+
+    return msg_id_outcome

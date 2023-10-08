@@ -8,16 +8,17 @@ import os
 def case_main(call, bot):
     current_btn_name = call.data
     current_chat_id = call.message.chat.id
-    current_message_id = call.message.message_id
+    msg_id_income = call.message.message_id
+    msg_id_outcome = msg_id_income + 1
     current_result_text = ''
     current_reply_markup = types.InlineKeyboardMarkup()
     flg_need_response = 0
 
     #каждый базовый ID описан в методе создания основной клавиатуры - keyboards.main_menu. Каждая ветка меню раскидана по методам для удобства написания кода. Чтобы тупо не запутаться в if-elif
     if current_btn_name.startswith('1'):
-        (current_result_text, current_reply_markup) = shinobu(bot, current_chat_id, current_message_id, current_btn_name)
+        (current_result_text, current_reply_markup, msg_id_outcome) = shinobu(bot, current_chat_id, msg_id_outcome, current_btn_name)
     elif current_btn_name.startswith('2'):
-        (current_result_text, current_reply_markup) = music(bot, current_chat_id, current_btn_name)
+        (current_result_text, current_reply_markup, msg_id_outcome) = music(bot, current_chat_id, current_btn_name, msg_id_outcome)
     elif current_btn_name.startswith('3'):
         (current_result_text, current_reply_markup) = subscriptions(bot, current_chat_id, current_btn_name)
     elif current_btn_name.startswith('4'):
@@ -25,7 +26,7 @@ def case_main(call, bot):
     elif current_btn_name.startswith('5'):
         (current_result_text, current_reply_markup, flg_need_response) = crypting(bot, current_chat_id, current_btn_name)
     elif current_btn_name.startswith('6'):
-        (current_result_text, current_reply_markup, flg_need_response) = japanese(bot, current_chat_id, current_btn_name)
+        (current_result_text, current_reply_markup, flg_need_response, msg_id_outcome) = japanese(bot, current_chat_id, current_btn_name, msg_id_outcome)
     elif current_btn_name.startswith('7'):
         (current_result_text, current_reply_markup) = donat(bot, current_chat_id, current_btn_name)
     elif current_btn_name.startswith('8'):
@@ -35,12 +36,27 @@ def case_main(call, bot):
     else:
         current_result_text = 'Нажата какая-то кнопка'
 
-    queries_to_bd.save_outcome_data(current_chat_id, current_message_id, 'button text', current_result_text, 0, flg_need_response)
+    #чтобы у нас меню всегда оставалось внизу, пытаемся удалить старое меню (может не получиться, тк прошло 48 часов со с его отправки). Если не получается - просто редактируем его.
+    try:
+        bot.delete_message(chat_id = current_chat_id, message_id = msg_id_income)
+    except:
+        bot.edit_message_text(chat_id = current_chat_id, message_id = msg_id_income, text = 'Потрачено')
 
-    bot.edit_message_text(chat_id = current_chat_id, message_id = current_message_id, text = current_result_text, reply_markup = current_reply_markup)
+    #обновляем, что нет активных меню в текущий момент
+    queries_to_bd.close_old_opening_menu(current_chat_id)
+
+    #отправляем новое меню
+    bot.send_message(current_chat_id, current_result_text, reply_markup = current_reply_markup)
+
+    #сохраняем данные по последнему, новому, отправленному, активному меню.
+    queries_to_bd.save_outcome_data(current_chat_id, msg_id_outcome, 'button text', current_result_text, 1, flg_need_response)
+
+    #бесполезное действие, но пусть будет, как напоминание. Если происходит отправка чего-то, например фото, стикера, аудио - неважно. После любой отправки обязательно надо инкрементировать переменную msg_id_outcome
+    msg_id_outcome = msg_id_outcome + 1
+
 
 #ветка кнопок с Шинобу
-def shinobu(bot, chat_id, msg_id, btn_data):
+def shinobu(bot, chat_id, msg_id_outcome, btn_data):
     text = ''
     reply_markup = types.InlineKeyboardMarkup()
     #кнопка, открывающая основное меню Шинобу
@@ -49,34 +65,34 @@ def shinobu(bot, chat_id, msg_id, btn_data):
     #кнопка, открывающая меню с отправкой пикчи с Шинобу
     elif btn_data == '1/1':
         (text, reply_markup) = keyboards.shinobu_pic()
-        common_methods.send_shinobu_pic(bot, chat_id, msg_id)
+        msg_id_outcome = common_methods.send_shinobu_pic(bot, chat_id, msg_id_outcome)
     #кнопка, заново генерирующая тоже меню, где находится, но меняет текст самого меню (чтобы телеграм не давал ошибку) и отправляющая повторно пикчу
     elif btn_data == '1/1/1':
         (text, reply_markup) = keyboards.shinobu_pic()
         text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        common_methods.send_shinobu_pic(bot, chat_id, msg_id)
+        msg_id_outcome = common_methods.send_shinobu_pic(bot, chat_id, msg_id_outcome)
     #кнопка, возвращающая на основное меню Шинобу из меню пикчи с Шинобу
     elif btn_data == '1/1/2':
         (text, reply_markup) = keyboards.shinobu_main()
     #кнопка, открывающая меню с отправкой стикера с Шинобу
     elif btn_data == '1/2':
         (text, reply_markup) = keyboards.shinobu_stick()
-        common_methods.send_shinobu_stick(bot, chat_id, msg_id)
+        msg_id_outcome = common_methods.send_shinobu_stick(bot, chat_id, msg_id_outcome)
     #кнопка, заново генерирующая тоже меню, где находится, но меняет текст самого меню (чтобы телеграм не давал ошибку) и отправляющая повторно стикер
     elif btn_data == '1/2/1':
         (text, reply_markup) = keyboards.shinobu_stick()
         text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        common_methods.send_shinobu_stick(bot, chat_id, msg_id)
+        msg_id_outcome = common_methods.send_shinobu_stick(bot, chat_id, msg_id_outcome)
     #кнопка, возвращающая на основное меню Шинобу из меню стикера с Шинобу
     elif btn_data == '1/2/2':
         (text, reply_markup) = keyboards.shinobu_main()
     #кнопка, возвращающая из основного меню с Шинобу в главное меню
     elif btn_data == '1/3':
         (text, reply_markup) = keyboards.main_menu(chat_id)
-    return text, reply_markup
+    return text, reply_markup, msg_id_outcome
 
 #ветка кнопок с музыкой
-def music(bot, chat_id, btn_data):
+def music(bot, chat_id, btn_data, msg_id_outcome):
     text = ''
     reply_markup = types.InlineKeyboardMarkup()
     #кнопка, открывающая меню со всеми исполнителями, сгруппированных по первому символу
@@ -99,6 +115,8 @@ def music(bot, chat_id, btn_data):
         if file_size < 50:
             flag_success_size = 1
             bot.send_audio(chat_id, audio=open(full_song_path, 'rb'))
+            queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'audio', full_song_path, 0, 0)
+            msg_id_outcome = msg_id_outcome + 1
         else:
             flag_success_size = 0
         (text, reply_markup) = keyboards.music_menu_last(flag_success_size, btn_data)
@@ -122,7 +140,7 @@ def music(bot, chat_id, btn_data):
     #кнопка, возвращающая на главное меню
     elif btn_data.startswith("2/back_5/"):
         (text, reply_markup) = keyboards.main_menu(chat_id)
-    return text, reply_markup
+    return text, reply_markup, msg_id_outcome
 
 #ветка кнопок с подписками
 def subscriptions(bot, chat_id, btn_data):
@@ -279,15 +297,13 @@ def crypting(bot, chat_id, btn_data):
 
 
 #ветка кнопок с изучением японского
-def japanese(bot, chat_id, btn_data):
+def japanese(bot, chat_id, btn_data, msg_id_outcome):
     flg_need_response = 0
     text = ''
     reply_markup = types.InlineKeyboardMarkup()
-
     #кнопка, возвращающая основное меню по изучению Японского
     if btn_data == '6':
         (text, reply_markup) = keyboards.japanese_main()
-
     #кнопка возвращающая в главное меню
     elif btn_data == '6/back/0':
         (text, reply_markup) = keyboards.main_menu(chat_id)
@@ -310,24 +326,22 @@ def japanese(bot, chat_id, btn_data):
     elif btn_data.startswith('6/1/1/'):
         decade_number = (btn_data.split('/'))[-1]
         (text, reply_markup) = keyboards.last_japanese_menu_by_certain_kani(decade_number)
-        common_methods.send_kanji_quiz_by(bot, chat_id, decade_number)
+        msg_id_outcome = common_methods.send_kanji_quiz_by(bot, chat_id, decade_number, msg_id_outcome)
     #Квиз со всеми имеющимися кандзи
     elif btn_data == '6/1/2':
         (text, reply_markup) = keyboards.last_japanese_menu_by_full_kani()
-        common_methods.send_kanji_quiz_by(bot, chat_id)
+        msg_id_outcome = common_methods.send_kanji_quiz_by(bot, chat_id, None, msg_id_outcome)
     #кнпока "еще" - квиз со всеми имеющимися кандзи
     elif btn_data == '6/1/2/1':
         (text, reply_markup) = keyboards.last_japanese_menu_by_full_kani()
         text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        common_methods.send_kanji_quiz_by(bot, chat_id)
+        msg_id_outcome = common_methods.send_kanji_quiz_by(bot, chat_id, None, msg_id_outcome)
     #кнопка "еще" после получения квиза с кандзи по номеру определенного десятка
     elif btn_data.startswith('6/1/3/'):
         decade_number = (btn_data.split('/'))[-1]
         (text, reply_markup) = keyboards.last_japanese_menu_by_certain_kani(decade_number)
         text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        common_methods.send_kanji_quiz_by(bot, chat_id, decade_number)
-
-
+        msg_id_outcome = common_methods.send_kanji_quiz_by(bot, chat_id, decade_number, msg_id_outcome)
     #меню с словарем пройденных слов
     elif btn_data == '6/2':
         (text, reply_markup) = keyboards.japanese_my_dict()
@@ -335,7 +349,6 @@ def japanese(bot, chat_id, btn_data):
     elif btn_data == '6/2/1' or btn_data == '6/2/2' or btn_data == '6/2/3':
         flg_need_response = 1
         (text, reply_markup) = keyboards.japanese_search_in_my_dict()
-
     #меню с словарем warodai
     elif btn_data == '6/3':
         (text, reply_markup) = keyboards.japanese_warodai_dict()
@@ -343,18 +356,7 @@ def japanese(bot, chat_id, btn_data):
     elif btn_data == '6/3/1' or btn_data == '6/3/2':
         flg_need_response = 1
         (text, reply_markup) = keyboards.japanese_search_in_warodai_dict()
-
-
-
-
-
-
-    return text, reply_markup, flg_need_response
-
-
-
-
-
+    return text, reply_markup, flg_need_response, msg_id_outcome
 
 #ветка кнопок с донатом
 def donat(bot, chat_id, btn_data):

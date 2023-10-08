@@ -9,7 +9,7 @@ import common_methods
 #на этапе запуска бота подготовим данные для кнопок музыки, тк самой музыки очень много
 common_methods.prepare_music_data()
 
-MypyBot = telebot.TeleBot(my_cfg.telegram_token, parse_mode = None)
+MypyBot = telebot.TeleBot(my_cfg.telegram_token)
 
 CONTENT_TYPES = ["text", "audio", "document", "photo", "sticker", "video", "video_note", "voice", "location", "contact",
                  "new_chat_members", "left_chat_member", "new_chat_title", "new_chat_photo", "delete_chat_photo",
@@ -19,7 +19,7 @@ CONTENT_TYPES = ["text", "audio", "document", "photo", "sticker", "video", "vide
 #хэндер простых сообщений   
 @MypyBot.message_handler(content_types=CONTENT_TYPES)
 def start_message(message):
-    try:
+    #try:
         print(f"Пришло сообщение от: {message.from_user.username}\nТип сообщения: {str(message.content_type)}\nТекст сообщения: {message.text}\n")
             
         #проверяет пользователя в бд, если есть-обновляет данные, если нет-добавляет данные
@@ -48,8 +48,8 @@ def start_message(message):
                         #может не получится удалить, тк прошло больше 48 часов, в таком случае, редактируем их
                         MypyBot.edit_message_text(chat_id = message.chat.id, message_id = msg, text = 'Потрачено')
                     
-                #запоминает в бд, что закрыл их
-                queries_to_bd.close_old_opening_menu(message.chat.id, msg_list)
+                #обновляем, что нет активных меню в текущий момент
+                queries_to_bd.close_old_opening_menu(message.chat.id)
                 
             #получает основное меню
             (text_out, reply_markup_out) = keyboards.main_menu(message.chat.id)
@@ -58,7 +58,7 @@ def start_message(message):
             MypyBot.send_message(message.chat.id, text_out, reply_markup = reply_markup_out, parse_mode = 'MarkdownV2')
             
             #сохраняет данные
-            queries_to_bd.save_outcome_data(message.chat.id, message.message_id, 'menu', text_out, 1, 0)
+            queries_to_bd.save_outcome_data(message.chat.id, message.message_id + 1, 'menu', text_out, 1, 0)
             
         else:
             #проверяем, задал ли бот вопрос пользователю, на который он обязательно должен ответить текстом в чате
@@ -72,6 +72,7 @@ def start_message(message):
                 
                 current_result_text = ''
                 current_reply_markup = telebot.types.InlineKeyboardMarkup()
+                current_parsemod = ''
                 
                 #если последняя нажатая кнопка относится к меню с ID = 4, то это напоминалки. В напоминалках только в 1 месте требуется, чтобы пользователь дал ответ текстом - это при вводе информации, что же нужно напомнить
                 if what_is_current_context.startswith("4"):
@@ -98,6 +99,8 @@ def start_message(message):
                     
                     #отправляем на шифровку/дешифровку
                     (current_result_text, current_reply_markup) = keyboards.crypting_result(operation_type, lang_code, key, message.text)
+                    
+                    current_parsemod = 'MarkdownV2'
                 
                 #если последняя нажатая кнопка относится к меню с ID = 6, то это изучение японского. В японском может быть только 2 варианта ввода текста - это поиск слова в моем личном словаре и с в словаре warudai
                 elif what_is_current_context.startswith("6"):
@@ -139,19 +142,30 @@ def start_message(message):
                         #отправляем на поиск перевода
                         (current_result_text, current_reply_markup) = keyboards.japanese_warodai_dict_translate(jap_text, rus_text)
                         
-                #сохраняем уходящие данные
-                queries_to_bd.save_outcome_data(message.chat.id, cur_message_id, 'button text', current_result_text, 0, 0)
                         
-                #редактируем в конечном итоге само меню для продолжения работы в режиме одного меню
-                MypyBot.edit_message_text(chat_id = message.chat.id, message_id = cur_message_id, text = current_result_text, reply_markup = current_reply_markup)
+                #чтобы у нас меню всегда оставалось внизу, надо удалить старое меню
+                MypyBot.delete_message(chat_id = message.chat.id, message_id = cur_message_id)
+
+                #обновляем, что нет активных меню в текущий момент
+                queries_to_bd.close_old_opening_menu(message.chat.id)
+    
+                #и отправить новое меню
+                MypyBot.send_message(message.chat.id, current_result_text, reply_markup = current_reply_markup, parse_mode = current_parsemod)  
+                                      
+                #сохраняем уходящие данные
+                queries_to_bd.save_outcome_data(message.chat.id, cur_message_id + 1, 'button text', current_result_text, 1, 0)
                 
             #иначе заглушка
             else:
+                
+                current_result_text = '``` Для вызова меню используйте команду /menu ```'
+                
+                MypyBot.send_message(message.chat.id, current_result_text , parse_mode = 'MarkdownV2')
+                
+                queries_to_bd.save_outcome_data(message.chat.id, message.message_id + 1, 'text', current_result_text, 0, 0)
             
-                MypyBot.send_message(message.chat.id,  '``` Для вызова меню используйте команду /menu ```', parse_mode = 'MarkdownV2')
-            
-    except Exception as e:
-        print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
+    #except Exception as e:
+        #print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
 
 #хэндлер редактирования сообщений
 @MypyBot.edited_message_handler(content_types="text")
@@ -168,7 +182,7 @@ def catch_edit_msg(message):
 #хэндлер нажатий на кнопки
 @MypyBot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
-    #try:
+    try:
         
         print(f"{call.from_user.username} нажал кнопку {call.data}.\n")
         
@@ -178,7 +192,7 @@ def callback_inline(call):
         #уходим в кейсы всевозможных кнопок
         callback_query_cases.case_main(call, MypyBot)
         
-    #except Exception as e:
-        #print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
+    except Exception as e:
+        print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
 
 MypyBot.polling(none_stop=True)
