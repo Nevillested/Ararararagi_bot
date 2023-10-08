@@ -519,3 +519,78 @@ def get_status_of_notification(notification_id):
     result_tuple = cur.fetchone()
     result_str = str(result_tuple[0])
     return result_str
+
+# возаращет список десятков всех кандзи. Ну то есть в базе находится 157 кандзи например. Вот запрос получает список из чисел от 1 до 16 выдает его
+def get_list_of_decade_number():
+    cur.execute("""
+    SELECT distinct decade_number
+      FROM arabot.jap_kanji;
+    """)
+    rows = cur.fetchall()
+    return rows
+
+# получает 4 рандомных кандзи из таблицы (по номеру десятка, если он указан)
+def get_list_of_kanji(decade_number = None):
+    additional_filter = ''
+    if decade_number != None:
+        additional_filter = ' and decade_number = ' + str(decade_number)
+    cur.execute("""
+    select id, kanji, reading, rus_word
+      from arabot.jap_kanji
+     where 1 = 1 """ + additional_filter + """
+     ORDER BY random()
+     limit 4
+    """)
+    rows = cur.fetchall()
+    return rows
+
+#ищет перевод в нашем словаре
+def search_in_my_dict_translate(kanji_search, kana_search, rus_search):
+    current_filtr = ''
+    if kanji_search != None:
+        current_filtr = "lower(using_kanji) like lower('%" + kanji_search.replace("'","''") + "%') "
+    elif kana_search != None:
+        current_filtr = "lower(using_kana) like lower('%" + kana_search.replace("'","''") + "%') "
+    elif rus_search != None:
+        current_filtr = "lower(rus) like lower('%" + rus_search.replace("'","''") + "%') "
+
+    cur.execute("""
+    SELECT STRING_AGG (
+        'С употреблением кандзи: ' || case when using_kanji is null then 'данные отсутствуют' else using_kanji end || '\n' ||
+        'С использованием каны: ' || case when using_kana is null then 'данные отсутствуют' else using_kana end || '\n' ||
+        'Чтения кандзи: ' || case when reading_kanji is null then 'данные отсутствуют' else reading_kanji end || '\n' ||
+        'Перевод: ' || case when rus is null then 'данные отсутствуют' else rus end
+            ,';\n\n')
+    FROM arabot.japanese_dict
+    where 1 = 1
+    and """ + current_filtr + """
+    """)
+    result_tuple = cur.fetchone()
+    result_str = str(result_tuple[0])
+    return result_str
+
+#ищет перевод в словаре warodai
+def search_in_warodai_dict_translate(jap_text, rus_text):
+    current_filtr = ''
+    if jap_text != None:
+        current_filtr = "( similarity(lower('" + jap_text.replace("'","''") + "'),lower(using_kana) ) * 100  >= 40 or similarity(lower('" + jap_text.replace("'","''") + "'),lower(using_kanji) ) * 100  >= 40 ) "
+    elif rus_text != None:
+        current_filtr = " similarity(lower('" + rus_text.replace("'","''") + "'),lower(rus_word) ) * 100  >= 40 "
+
+    cur.execute("""
+    SELECT STRING_AGG (
+        'С употреблением кандзи: ' || case when using_kanji is null then 'данные отсутствуют' else using_kanji end || '\n' ||
+        'С использованием каны: ' || case when using_kana is null then 'данные отсутствуют' else using_kana end || '\n' ||
+        'Чтения по-русски: ' || case when reading_rus is null then 'данные отсутствуют' else reading_rus end || '\n' ||
+        'Перевод: ' || case when rus_word is null then 'данные отсутствуют' else rus_word end
+            ,';\n\n')
+    FROM arabot.warodai_dict
+    where 1 = 1
+    and """ + current_filtr + """
+    """)
+    result_tuple = cur.fetchone()
+    result_str = str(result_tuple[0])
+    return result_str
+
+
+

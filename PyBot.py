@@ -36,10 +36,17 @@ def start_message(message):
             #если уже есть открытые меню...
             if len(msg_list) != 0:
                 
-                #...закрывает их
+                #проходится по всем msg_id этих меню
                 for msg in msg_list:
                     
-                    MypyBot.edit_message_text(chat_id = message.chat.id, message_id = msg, text = 'Потрачено')
+                    try:
+                        #и пытается их удалить
+                        MypyBot.delete_message(chat_id = message.chat.id, message_id = msg)
+                        
+                    except:
+                    
+                        #может не получится удалить, тк прошло больше 48 часов, в таком случае, редактируем их
+                        MypyBot.edit_message_text(chat_id = message.chat.id, message_id = msg, text = 'Потрачено')
                     
                 #запоминает в бд, что закрыл их
                 queries_to_bd.close_old_opening_menu(message.chat.id, msg_list)
@@ -91,7 +98,49 @@ def start_message(message):
                     
                     #отправляем на шифровку/дешифровку
                     (current_result_text, current_reply_markup) = keyboards.crypting_result(operation_type, lang_code, key, message.text)
+                
+                #если последняя нажатая кнопка относится к меню с ID = 6, то это изучение японского. В японском может быть только 2 варианта ввода текста - это поиск слова в моем личном словаре и с в словаре warudai
+                elif what_is_current_context.startswith("6"):
+                    
+                    #поиск по моему словарю
+                    if what_is_current_context.startswith("6/2/"):
                         
+                        kanji_search = None
+                        kana_search = None
+                        rus_search = None
+                        
+                        #получаем id типа поиска. 1 = по кадзи, 2 = по кане, 3 = по русскому переводу
+                        search_id = (what_is_current_context.split('/'))[-1]
+                        
+                        if search_id == '1':
+                            kanji_search = message.text
+                        elif search_id == '2':
+                            kana_search = message.text
+                        elif search_id == '3':
+                            rus_search = message.text
+                        
+                        #отправляем на поиск перевода
+                        (current_result_text, current_reply_markup) = keyboards.japanese_my_dict_translate(kanji_search, kana_search, rus_search)
+                    
+                    #поиск по словарю warodai
+                    elif what_is_current_context.startswith("6/3/"):
+                        
+                        jap_text = None
+                        rus_text = None
+                        
+                        #получаем id типа поиска. 1 = по японской писанине, 3 = по русской писанине
+                        search_id = (what_is_current_context.split('/'))[-1]
+                        
+                        if search_id == '1':
+                            jap_text = message.text
+                        elif search_id == '2':
+                            rus_text = message.text
+                        
+                        #отправляем на поиск перевода
+                        (current_result_text, current_reply_markup) = keyboards.japanese_warodai_dict_translate(jap_text, rus_text)
+                        
+                #сохраняем уходящие данные
+                queries_to_bd.save_outcome_data(message.chat.id, cur_message_id, 'button text', current_result_text, 0, 0)
                         
                 #редактируем в конечном итоге само меню для продолжения работы в режиме одного меню
                 MypyBot.edit_message_text(chat_id = message.chat.id, message_id = cur_message_id, text = current_result_text, reply_markup = current_reply_markup)
@@ -119,7 +168,7 @@ def catch_edit_msg(message):
 #хэндлер нажатий на кнопки
 @MypyBot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
-    try:
+    #try:
         
         print(f"{call.from_user.username} нажал кнопку {call.data}.\n")
         
@@ -129,7 +178,7 @@ def callback_inline(call):
         #уходим в кейсы всевозможных кнопок
         callback_query_cases.case_main(call, MypyBot)
         
-    except Exception as e:
-        print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
+    #except Exception as e:
+        #print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
 
 MypyBot.polling(none_stop=True)

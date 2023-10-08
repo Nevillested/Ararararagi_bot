@@ -4,6 +4,7 @@ import random
 import urllib
 import os
 import queries_to_bd
+import random
 
 ############################### отправляет рандомную пикчу с Шинобу с реактора ###############################
 def send_shinobu_pic(bot, chat_id, msg_id):
@@ -148,3 +149,40 @@ def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):
         text_out = 'Расшифрованный текст:\n' + text_out
 
     return text_out
+
+############################### Метод отправки квизов ###############################
+#это можно было сделать намного лучше, но у меня руки из жопы обращаться со списками, массивами и кортежами
+def send_kanji_quiz_by(bot, chat_id, decade_number = None):
+
+    tuple_of_kanji = queries_to_bd.get_list_of_kanji(decade_number)
+
+    array_of_kanji_id = []
+
+    poll_options_out = []
+
+    array_of_kanji = []
+
+    for item in tuple_of_kanji:
+
+        #наполняем массив с вариантами ответов
+        poll_options_out.append(item[3] + ' (Чтения: ' + item[2] + ')')
+
+        #наполняем массив с ID кандзи
+        array_of_kanji_id.append(item[0])
+
+        #наполяем массив с иероглифами кандзи
+        array_of_kanji.append(item[1])
+
+    #выбираем рандомом ID кандзи, по которому будем спрашивать
+    selected_value = random.choice(array_of_kanji_id)
+
+    #ищем индекс правильного ответа в массивев массиве
+    correct_option_id_out = array_of_kanji_id.index(selected_value)
+
+    #ищем иероглиф кандзи, по которому задаем вопрос
+    question_kaji = array_of_kanji[correct_option_id_out]
+
+    text = 'Что это за кандзи ' + question_kaji + ' ?'
+
+    #отправляем квиз
+    bot.send_poll(chat_id, text, options = poll_options_out, correct_option_id  = correct_option_id_out, type = 'quiz')
