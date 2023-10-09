@@ -603,5 +603,30 @@ def search_in_warodai_dict_translate(jap_text, rus_text):
     result_str = str(result_tuple[0])
     return result_str
 
+#получает данные для напоминалок
+def get_notifications_data():
+    cur.execute("""
+    SELECT id,
+           notif_name,
+           chat_id
+      FROM arabot.notifications
+     WHERE 1 = 1
+       AND activity_flg = 1
+       AND TO_TIMESTAMP( year_num || '-' || month_num || '-' || day_num || ' ' || hour_num || ':'  || minute_num || ':00', 'YYYY-MM-DD HH24:MI:SS') = date_trunc('Minute', CURRENT_TIMESTAMP)
+    """)
+    rows = cur.fetchall()
+    return rows
 
+#получает данные для рассылок
+def get_subscriptions_data():
+    cur.execute("""
+    SELECT chat_id, subscription_id
+      FROM arabot.user_subscriptions a
+     WHERE a.activity_flg = 1
+    """)
+    rows = cur.fetchall()
+    return rows
 
+#обновляет следующее время старта напоминалки
+def update_notification_next_start(notification_id):
+    cur.execute("CALL arabot.update_notification_next_start(" + str(notification_id) + ");")

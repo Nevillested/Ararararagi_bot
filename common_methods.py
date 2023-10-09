@@ -7,31 +7,31 @@ import queries_to_bd
 import random
 
 ############################### отправляет рандомную пикчу с Шинобу с реактора ###############################
+def get_shinobu_pic():
+    url = "https://joyreactor.cc/search/+/" + str(random.randint(1,50)) + "?tags=Oshino+Shinobu%2C+"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, "html.parser")
+    image_links = []
+    need_images = []
+
+    for image in soup.find_all("img"):
+        image_links.append(image["src"])
+
+    for cur_img_link in image_links:
+        if str(cur_img_link).__contains__('img10.joyreactor.cc/pics/post/'):
+            need_images.append("https:" + cur_img_link)
+
+    url_of_result_image = random.choice(need_images)
+
+    return url_of_result_image
+
 def send_shinobu_pic(bot, chat_id, msg_id_outcome):
-    num_page = str(random.randint(1,50))
-    page = "https://joyreactor.cc/search/+/" + num_page + "?tags=Oshino+Shinobu%2C+"
-    html_page = urllib.request.urlopen(page)
-    soup = BeautifulSoup(html_page, "lxml")
-    images_url = []
 
-    for img in soup.findAll('img'):
-        if img.get('src').__contains__('post'):
-            images_url.append('https:'+img.get('src'))
+    url_of_result_image = get_shinobu_pic()
 
-    url_of_result_image =  images_url[random.randint(1,len(images_url)-1)]
+    bot.send_photo(chat_id, photo = url_of_result_image, has_spoiler = True)
 
-    response = requests.get(url_of_result_image)
-
-    #не очень красиво, что дирректория прописана вручную, но поправлю позже через os get cwd. Попробуй подключиться, если сможешь:)
-    img_dir = '/home/duck/Documents/GitHub/arabot_dev/assets/temp/shinobu.jpeg'
-    if response.status_code:
-        fp = open(img_dir, 'wb')
-        fp.write(response.content)
-        fp.close()
-
-    bot.send_photo(chat_id, photo = open(img_dir, 'rb'), has_spoiler = True)
-
-    queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'photo', img_dir, 0, 0)
+    queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'photo', url_of_result_image, 0, 0)
 
     msg_id_outcome = msg_id_outcome + 1
 

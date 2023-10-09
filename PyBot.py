@@ -5,6 +5,10 @@ import queries_to_bd
 import keyboards
 import callback_query_cases
 import common_methods
+import send_scheduler
+import datetime
+import threading
+import time
 
 #на этапе запуска бота подготовим данные для кнопок музыки, тк самой музыки очень много
 common_methods.prepare_music_data()
@@ -19,7 +23,7 @@ CONTENT_TYPES = ["text", "audio", "document", "photo", "sticker", "video", "vide
 #хэндер простых сообщений   
 @MypyBot.message_handler(content_types=CONTENT_TYPES)
 def start_message(message):
-    #try:
+    try:
         print(f"Пришло сообщение от: {message.from_user.username}\nТип сообщения: {str(message.content_type)}\nТекст сообщения: {message.text}\n")
             
         #проверяет пользователя в бд, если есть-обновляет данные, если нет-добавляет данные
@@ -164,8 +168,8 @@ def start_message(message):
                 
                 queries_to_bd.save_outcome_data(message.chat.id, message.message_id + 1, 'text', current_result_text, 0, 0)
             
-    #except Exception as e:
-        #print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
+    except Exception as e:
+        print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
 
 #хэндлер редактирования сообщений
 @MypyBot.edited_message_handler(content_types="text")
@@ -195,4 +199,15 @@ def callback_inline(call):
     except Exception as e:
         print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
 
+#шедулер
+def scheduler():
+    while True:
+        try:
+            send_scheduler.main(MypyBot)
+            time.sleep(60)
+        except Exception as e:
+            print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
+
+child_thread = threading.Thread(target=scheduler)
+child_thread.start()
 MypyBot.polling(none_stop=True)

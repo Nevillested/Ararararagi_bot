@@ -3,6 +3,8 @@ import keyboards
 import queries_to_bd
 import common_methods
 import os
+from telebot.types import LabeledPrice
+import my_cfg
 
 #точка входа главного меню, корень всех ветвлений
 def case_main(call, bot):
@@ -28,13 +30,9 @@ def case_main(call, bot):
     elif current_btn_name.startswith('6'):
         (current_result_text, current_reply_markup, flg_need_response, msg_id_outcome) = japanese(bot, current_chat_id, current_btn_name, msg_id_outcome)
     elif current_btn_name.startswith('7'):
-        (current_result_text, current_reply_markup) = donat(bot, current_chat_id, current_btn_name)
+        (current_result_text, current_reply_markup, msg_id_outcome) = donat(bot, current_chat_id, current_btn_name, msg_id_outcome)
     elif current_btn_name.startswith('8'):
         (current_result_text, current_reply_markup) = something(bot, current_chat_id, current_btn_name)
-    elif current_btn_name.startswith('9'):
-        (current_result_text, current_reply_markup) = admin(bot, current_chat_id, current_btn_name)
-    else:
-        current_result_text = 'Нажата какая-то кнопка'
 
     #чтобы у нас меню всегда оставалось внизу, пытаемся удалить старое меню (может не получиться, тк прошло 48 часов со с его отправки). Если не получается - просто редактируем его.
     try:
@@ -359,16 +357,99 @@ def japanese(bot, chat_id, btn_data, msg_id_outcome):
     return text, reply_markup, flg_need_response, msg_id_outcome
 
 #ветка кнопок с донатом
-def donat(bot, chat_id, btn_data):
-    (text, reply_markup) = keyboards.donat_main()
-    return text, reply_markup
+def donat(bot, chat_id, btn_data, msg_id_outcome):
+    text = ''
+    reply_markup = types.InlineKeyboardMarkup()
+
+    #основное меню доната
+    if btn_data == "7":
+        (text, reply_markup) = keyboards.donat_main()
+    #возвращает в главное меню
+    elif btn_data == "7/back/0":
+        (text, reply_markup) = keyboards.main_menu(chat_id)
+
+    #кнопка, возвращающая инвойс
+    elif btn_data in ["7/1","7/2","7/3","7/4"]:
+        (text, reply_markup) = keyboards.donat_invoice()
+
+        title_out = ''
+        description_out = ''
+        photo_url_out = ''
+        prices_out = -1
+
+        title_out = None
+        description_out = None
+        invoice_payload_out = 'Shut up and take my money!'
+        currency_out = 'RUB'
+        prices_out = None
+        photo_url_out = None
+        start_parameter_out = 'payment_start'
+        max_tip_amount_out = None
+        suggested_tip_amounts_out = None
+
+        if btn_data == "7/1":
+            title_out = 'owner = one love'
+            description_out = 'Потому что я такой хорошенький'
+            photo_url_out = None #'https://i.ibb.co/H7Zv0qp/1.jpg'
+            prices_out = 10000
+
+        elif btn_data == "7/2":
+            title_out = 'Денег нет, но ты держись'
+            description_out = 'Не помирай плз, держи 150р'
+            photo_url_out = None #'https://i.ibb.co/DrR4mpk/2.jpg'
+            prices_out = 15000
+
+        elif btn_data == "7/3":
+            title_out = 'Бот - это святое'
+            description_out = 'Ты только представь свою жизнь без этого бота. Ага, и я о том же, расчехляй кошель'
+            photo_url_out = None #'https://i.ibb.co/6v1DT1d/3.jpg'
+            prices_out = 20000
+
+        elif btn_data == "7/4":
+            title_out = 'ka-ka'
+            description_out = 'Шинобу - лучшая девочка, ты это понимаешь?\nПоэтому давай, расчехляй свой кошель и без лишних вопросов скидывайся на кошерные фигурки.\nВсе скидываются, и ты скидывайся, давай, не ломайся\n(тут могла быть ваша пассивно-агрессивная реклама)'
+            photo_url_out = None #'https://i.ibb.co/3vqH491/ga4wtboduxm-0-Rf5-U-1-1.jpg'#'https://i.ibb.co/pbQLhks/123123-0-Rf5-U.jpg'
+            prices_out = 100000
+
+        #отправляет данные для платежа
+        bot.send_invoice(chat_id               = chat_id,
+                         title                 = title_out,
+                         description           = description_out,
+                         invoice_payload       = 'Shut up and take my money!',
+                         provider_token        = my_cfg.provider_token,
+                         currency              = 'RUB',
+                         prices                = [LabeledPrice(label='Выворачивай карманы, к оплате: ', amount= prices_out )],
+                         photo_url             = photo_url_out,
+                         photo_height          = 512,
+                         photo_width           = 512,
+                         photo_size            = 512,
+                         is_flexible           = False,
+                         start_parameter       = 'payment_start',
+                         max_tip_amount        = None,
+                         suggested_tip_amounts = None,
+                         need_email            = True,
+                         send_email_to_provider= True,
+                         provider_data         = '''{
+                                                     "receipt": {"customer": {"email": "ararararagi.payments@gmail.com"},
+                                                                 "items": [
+                                                                           {"description": "'''+description_out+'''",
+                                                                            "quantity": "1",
+                                                                            "amount": {"value": "'''+str(prices_out/100)+'''", "currency": "'''+currency_out+'''"},
+                                                                            "vat_code": "1"}
+                                                                          ]
+                                                             }
+                                                    }'''
+                        )
+
+        #сохраняем ушедшую инфу
+        queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'invoice', description_out, 0, 0)
+
+        #инкрементируем обязательно msg_id
+        msg_id_outcome = msg_id_outcome + 1
+
+    return text, reply_markup, msg_id_outcome
 
 #ветка кнопок с оставшимися полезностями
 def something(bot, chat_id, btn_data):
     (text, reply_markup) = keyboards.something_main()
-    return text, reply_markup
-
-#ветка кнопок админки
-def admin(bot, chat_id, btn_data):
-    (text, reply_markup) = keyboards.admin_main()
     return text, reply_markup

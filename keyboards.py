@@ -23,8 +23,6 @@ def main_menu(chat_id):
     text = 'Главное меню'
     cnt_object_in_row = 3
     dict_of_buttons = {"Шинобу" : "1", "Музыка" : "2", "Подписки" : "3", "Напоминалки" : "4", "Шифрование" : "5", "Японский" : "6", "Донат" : "7", "Еще" : "8"}
-    if str(chat_id) == str(my_cfg.chat_id_onwer):
-        dict_of_buttons["Админка"] = 9
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 
@@ -504,19 +502,25 @@ def japanese_warodai_dict_translate(jap_text, rus_text):
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 
-
-
-
-
-
+############################# клавиатуры с донатом #############################
 
 #клавиатура основного меню доната
 def donat_main():
     text = 'Донат изобретателю велосипеда'
-    cnt_object_in_row = 0
-    dict_of_buttons = {}
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Потому что я такой хорошенький - 100р" : "7/1", "На тяжелую жизнь бездомного разработчика - 150р" : "7/2", "На развитие бота, чтобы он делал вашу жизнь лучше - 200р" : "7/3", "На фигурки с лучшей девочкой ~~~р" : "7/4", "Назад" : "7/back/0"}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
+
+#клавиатура последнего меню доната
+def donat_invoice():
+    text = 'Плоти.'
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Назад":"7"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
+
+############################# клавиатуры с оставшимися полезностями #############################
 
 #клавиатура основного меню с оставшимися полезностями
 def something_main():
@@ -526,10 +530,14 @@ def something_main():
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 
-#клавиатура основного меню админки
-def admin_main():
-    text = 'Админка'
-    cnt_object_in_row = 0
-    dict_of_buttons = {}
-    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
-    return text, reply_to
+
+
+
+
+
+
+
+
+
+
+
