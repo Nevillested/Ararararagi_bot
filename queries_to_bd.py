@@ -389,7 +389,8 @@ def get_current_notifications(chat_id):
     cur.execute("""
     SELECT id,
            notif_name
-      FROM arabot.notifications;
+      FROM arabot.notifications
+     WHERE chat_id = """ + str(chat_id) + """;
     """)
     rows = cur.fetchall()
     subs_dict = {}
@@ -530,6 +531,42 @@ def get_status_of_notification(notification_id):
     result_tuple = cur.fetchone()
     result_str = str(result_tuple[0])
     return result_str
+
+#получает описание напоминалки по ее ID
+def get_notification_desc(notification_id):
+    cur.execute("""
+    SELECT 'Название: ' || case when notif_name is not null then notif_name else '-' end || '\n' ||
+           'Год: ' || case when year_num is not null then CAST (year_num AS text) else '-' end || '\n' ||
+           'Месяц: ' || case when month_num is not null then CAST (month_num AS text) else '-' end || '\n' ||
+           'День: ' || case when day_num is not null then CAST (day_num AS text) else '-' end || '\n' ||
+           'Час: ' || case when hour_num is not null then CAST (hour_num AS text) else '-' end || '\n' ||
+           'Минута: ' || case when minute_num is not null then CAST (minute_num AS text) else '-' end || '\n' ||
+           'Повторять: ' || case when repeat_flg = 1 then 'да' else 'нет' end || '\n' ||
+           case when repeat_flg = 1 then
+             'Частота повторения: ' ||
+             case
+               when every_year_flg is not null then 'каждый год'
+               when every_month_flg is not null then 'каждый час'
+               when every_week_flg is not null then 'каждую неделю'
+               when every_day_flg is not null then 'каждый день'
+               when every_hour_flg is not null then 'каждый час'
+               when every_minute_flg is not null then 'каждую минуту'
+             end
+           else ''
+           end
+      FROM arabot.notifications
+     WHERE id = """ + notification_id + """
+    """)
+    result_tuple = cur.fetchone()
+    result_str = str(result_tuple[0])
+    return result_str
+
+#удаляет напоминалку по ее ID
+def delete_notification(notification_id):
+    cur.execute("""
+    DELETE FROM arabot.notifications
+     WHERE id = """ + str(notification_id) + """
+    """)
 
 # возаращет список десятков всех кандзи. Ну то есть в базе находится 157 кандзи например. Вот запрос получает список из чисел от 1 до 16 выдает его
 def get_list_of_decade_number():

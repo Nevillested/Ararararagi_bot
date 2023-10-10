@@ -22,7 +22,7 @@ def create_inline_kb(dict_of_buttons, cnt_object_in_row):
 def main_menu(chat_id):
     text = 'Главное меню'
     cnt_object_in_row = 3
-    dict_of_buttons = {"Шинобу" : "1", "Музыка" : "2", "Подписки" : "3", "Напоминалки" : "4", "Шифрование" : "5", "Японский" : "6", "Донат" : "7", "Еще" : "8"}
+    dict_of_buttons = {"Шинобу" : "1", "Музыка" : "2", "Подписки" : "3", "Напоминалки" : "4", "Шифрование" : "5", "Японский" : "6", "Донат" : "7", "Речь ⇄ текст" : "8", "Еще" : "9"}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 
@@ -144,13 +144,13 @@ def subscription_result(activity_flg):
 def notifications_main():
     text = 'Управление напоминалками'
     cnt_object_in_row = 1
-    dict_of_buttons = {"Текущие напоминалки" : "4/1", "Новая напоминалка" : "4/2", "Назад" : "4/3"}
+    dict_of_buttons = {"Все имеющиеся напоминалки" : "4/1", "Новая напоминалка" : "4/2", "Назад" : "4/3"}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 
 #клавиатура с текущими напоминалками пользователя
 def notifications_current(chat_id):
-    text = 'Все текущие напоминалки'
+    text = 'Все имеющиеся напоминалки'
     cnt_object_in_row = 1
     dict_of_buttons = queries_to_bd.get_current_notifications(chat_id)
     dict_of_buttons["Назад"] = "4/1/back"
@@ -159,9 +159,10 @@ def notifications_current(chat_id):
 
 #Меню редактирования напоминалки
 def notification_edit(notification_id):
-    text = 'Редактирование напоминалки'
+    notification_desc = queries_to_bd.get_notification_desc(notification_id)
+    text = 'Редактирование напоминалки\n' + notification_desc
     cnt_object_in_row = 3
-    dict_of_buttons = {"Год" : "4/edit/year_num/" + str(notification_id), "Месяц" : "4/edit/month_num/" + str(notification_id), "День" : "4/edit/day_num/" + str(notification_id), "Час" : "4/edit/hour_num/" + str(notification_id), "Минута" : "4/edit/min_num/" + str(notification_id), "Частота повтора" : "4/edit/repeat_interval/" + str(notification_id),"Вкл/выкл" : "4/edit/activity/" + str(notification_id), "Назад к напоминалкам" : "4"}
+    dict_of_buttons = {"Год" : "4/edit/year_num/" + str(notification_id), "Месяц" : "4/edit/month_num/" + str(notification_id), "День" : "4/edit/day_num/" + str(notification_id), "Час" : "4/edit/hour_num/" + str(notification_id), "Минута" : "4/edit/min_num/" + str(notification_id), "Частота повтора" : "4/edit/repeat_interval/" + str(notification_id),"Вкл/выкл" : "4/edit/activity/" + str(notification_id), "Удалить" : "4/edit/delete/" + str(notification_id), "Назад к напоминалкам" : "4"}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 
@@ -243,7 +244,7 @@ def notif_hours(notification_id):
     if selected_day == 'None':
         text = 'Сначала надо выбрать день'
     else:
-        text = 'День напоминалки'
+        text = 'Час напоминалки'
         current_year = str(datetime.datetime.now().year)
         current_month = str(datetime.datetime.now().month)
         current_day = str(datetime.datetime.now().day)
@@ -271,7 +272,7 @@ def notif_minutes(notification_id):
     if selected_day == 'None':
         text = 'Сначала надо выбрать час'
     else:
-        text = 'День напоминалки'
+        text = 'Минута напоминалки'
         current_year = str(datetime.datetime.now().year)
         current_month = str(datetime.datetime.now().month)
         current_day = str(datetime.datetime.now().day)
@@ -339,6 +340,13 @@ def notif_turn_on_off(notification_id):
     reply_to = create_inline_kb(keyboard_dict, cnt_object_in_row)
     return text, reply_to
 
+def notif_delete(notification_id):
+    text = 'Удалить напоминалку?'
+    cnt_object_in_row = 1
+    keyboard_dict = {"Да, удалить" : "4/delete/" + str(notification_id), "Назад" : "4/1/" + str(notification_id)}
+    reply_to = create_inline_kb(keyboard_dict, cnt_object_in_row)
+    return text, reply_to
+
 ############################# клавиатуры с шифрованием и дешифрованием #############################
 
 #выбора языка
@@ -366,7 +374,7 @@ def crypting_key(lang_code, operation_type):
     elif operation_type == "decrypt":
         text = 'Выбери ключ для дешифрования'
     dict_of_buttons = {}
-    for i in range(1, 100):
+    for i in range(1, 20):
         dict_of_buttons[i] = "5/3/" + str(i) + "/"+ lang_code + "/" + operation_type
 
     dict_of_buttons["Назад"] = "5/back/2/" + lang_code
@@ -519,6 +527,27 @@ def donat_invoice():
     dict_of_buttons = {"Назад":"7"}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
+
+############################# клавиатуры с конвертацией текста в речь и наоборот #############################
+
+#основная клавиатура
+def text_speech_main():
+    text = 'Меню преобразования войса в текст и наоборот'
+    cnt_object_in_row = 2
+    dict_of_buttons = {"Текст в войс" : "8/1", "Войс в текст" : "8/2"}
+    dict_of_buttons["Назад"] = "8/back/0"
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
+
+
+
+
+
+
+
+
+
+
 
 ############################# клавиатуры с оставшимися полезностями #############################
 

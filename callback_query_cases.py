@@ -5,94 +5,100 @@ import common_methods
 import os
 from telebot.types import LabeledPrice
 import my_cfg
+import sending
 
 #точка входа главного меню, корень всех ветвлений
 def case_main(call, bot):
     current_btn_name = call.data
     current_chat_id = call.message.chat.id
-    msg_id_income = call.message.message_id
-    msg_id_outcome = msg_id_income + 1
-    current_result_text = ''
-    current_reply_markup = types.InlineKeyboardMarkup()
-    flg_need_response = 0
+    text_data = None
+    photo_data = None
+    poll_data = None
+    music_data = None
+    invoice_data = None
+    sticker_data = None
 
     #каждый базовый ID описан в методе создания основной клавиатуры - keyboards.main_menu. Каждая ветка меню раскидана по методам для удобства написания кода. Чтобы тупо не запутаться в if-elif
     if current_btn_name.startswith('1'):
-        (current_result_text, current_reply_markup, msg_id_outcome) = shinobu(bot, current_chat_id, msg_id_outcome, current_btn_name)
+        (text_data, photo_data, sticker_data) = shinobu(current_chat_id, current_btn_name)
+
     elif current_btn_name.startswith('2'):
-        (current_result_text, current_reply_markup, msg_id_outcome) = music(bot, current_chat_id, current_btn_name, msg_id_outcome)
+        (text_data, music_data) = music(current_chat_id, current_btn_name)
+
     elif current_btn_name.startswith('3'):
-        (current_result_text, current_reply_markup) = subscriptions(bot, current_chat_id, current_btn_name)
+        (text_data) = subscriptions(current_chat_id, current_btn_name)
+
     elif current_btn_name.startswith('4'):
-        (current_result_text, current_reply_markup, flg_need_response) = notifications(bot, current_chat_id, current_btn_name)
+        (text_data) = notifications(current_chat_id, current_btn_name)
+
     elif current_btn_name.startswith('5'):
-        (current_result_text, current_reply_markup, flg_need_response) = crypting(bot, current_chat_id, current_btn_name)
+        (text_data) = crypting(current_chat_id, current_btn_name)
+
     elif current_btn_name.startswith('6'):
-        (current_result_text, current_reply_markup, flg_need_response, msg_id_outcome) = japanese(bot, current_chat_id, current_btn_name, msg_id_outcome)
+        (text_data, poll_data) = japanese(current_chat_id, current_btn_name)
+
     elif current_btn_name.startswith('7'):
-        (current_result_text, current_reply_markup, msg_id_outcome) = donat(bot, current_chat_id, current_btn_name, msg_id_outcome)
+        (text_data, invoice_data) = donat(current_chat_id, current_btn_name)
+
     elif current_btn_name.startswith('8'):
-        (current_result_text, current_reply_markup) = something(bot, current_chat_id, current_btn_name)
+        (text_data) = text_speech(current_chat_id, current_btn_name)
 
-    #чтобы у нас меню всегда оставалось внизу, пытаемся удалить старое меню (может не получиться, тк прошло 48 часов со с его отправки). Если не получается - просто редактируем его.
-    try:
-        bot.delete_message(chat_id = current_chat_id, message_id = msg_id_income)
-    except:
-        bot.edit_message_text(chat_id = current_chat_id, message_id = msg_id_income, text = 'Потрачено')
+    elif current_btn_name.startswith('9'):
+        (text_data) = something(current_chat_id, current_btn_name)
 
-    #обновляем, что нет активных меню в текущий момент
-    queries_to_bd.close_old_opening_menu(current_chat_id)
-
-    #отправляем новое меню
-    bot.send_message(current_chat_id, current_result_text, reply_markup = current_reply_markup)
-
-    #сохраняем данные по последнему, новому, отправленному, активному меню.
-    queries_to_bd.save_outcome_data(current_chat_id, msg_id_outcome, 'button text', current_result_text, 1, flg_need_response)
-
-    #бесполезное действие, но пусть будет, как напоминание. Если происходит отправка чего-то, например фото, стикера, аудио - неважно. После любой отправки обязательно надо инкрементировать переменную msg_id_outcome
-    msg_id_outcome = msg_id_outcome + 1
-
+    #отправляем все в единый метод отправки
+    sending.main(bot, call.message.chat.id, call.message.message_id, text_data, photo_data, poll_data, music_data, invoice_data, sticker_data)
 
 #ветка кнопок с Шинобу
-def shinobu(bot, chat_id, msg_id_outcome, btn_data):
-    text = ''
+def shinobu(chat_id, btn_data):
     reply_markup = types.InlineKeyboardMarkup()
+    text = None
+    text_data = None
+    photo_data = None
+    sticker_data = None
+
     #кнопка, открывающая основное меню Шинобу
     if btn_data == '1':
         (text, reply_markup) = keyboards.shinobu_main()
     #кнопка, открывающая меню с отправкой пикчи с Шинобу
     elif btn_data == '1/1':
         (text, reply_markup) = keyboards.shinobu_pic()
-        msg_id_outcome = common_methods.send_shinobu_pic(bot, chat_id, msg_id_outcome)
+        photo_data = (common_methods.get_shinobu_pic(), True, 'Лучшая девочка')
     #кнопка, заново генерирующая тоже меню, где находится, но меняет текст самого меню (чтобы телеграм не давал ошибку) и отправляющая повторно пикчу
     elif btn_data == '1/1/1':
         (text, reply_markup) = keyboards.shinobu_pic()
         text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        msg_id_outcome = common_methods.send_shinobu_pic(bot, chat_id, msg_id_outcome)
+        photo_data = (common_methods.get_shinobu_pic(), True, 'Держи еще')
     #кнопка, возвращающая на основное меню Шинобу из меню пикчи с Шинобу
     elif btn_data == '1/1/2':
         (text, reply_markup) = keyboards.shinobu_main()
     #кнопка, открывающая меню с отправкой стикера с Шинобу
     elif btn_data == '1/2':
         (text, reply_markup) = keyboards.shinobu_stick()
-        msg_id_outcome = common_methods.send_shinobu_stick(bot, chat_id, msg_id_outcome)
+        sticker_data = common_methods.get_shinobu_stick()
     #кнопка, заново генерирующая тоже меню, где находится, но меняет текст самого меню (чтобы телеграм не давал ошибку) и отправляющая повторно стикер
     elif btn_data == '1/2/1':
         (text, reply_markup) = keyboards.shinobu_stick()
         text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        msg_id_outcome = common_methods.send_shinobu_stick(bot, chat_id, msg_id_outcome)
+        sticker_data = common_methods.get_shinobu_stick()
     #кнопка, возвращающая на основное меню Шинобу из меню стикера с Шинобу
     elif btn_data == '1/2/2':
         (text, reply_markup) = keyboards.shinobu_main()
     #кнопка, возвращающая из основного меню с Шинобу в главное меню
     elif btn_data == '1/3':
         (text, reply_markup) = keyboards.main_menu(chat_id)
-    return text, reply_markup, msg_id_outcome
+
+    text_data = (text, reply_markup, None, 0)
+
+    return text_data, photo_data, sticker_data
 
 #ветка кнопок с музыкой
-def music(bot, chat_id, btn_data, msg_id_outcome):
-    text = ''
+def music(chat_id, btn_data):
     reply_markup = types.InlineKeyboardMarkup()
+    text = None
+    text_data = None
+    music_data = None
+
     #кнопка, открывающая меню со всеми исполнителями, сгруппированных по первому символу
     if btn_data == '2':
         (text, reply_markup) = keyboards.music_abc()
@@ -112,9 +118,7 @@ def music(bot, chat_id, btn_data, msg_id_outcome):
         flag_success_size = -1
         if file_size < 50:
             flag_success_size = 1
-            bot.send_audio(chat_id, audio=open(full_song_path, 'rb'))
-            queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'audio', full_song_path, 0, 0)
-            msg_id_outcome = msg_id_outcome + 1
+            music_data = full_song_path
         else:
             flag_success_size = 0
         (text, reply_markup) = keyboards.music_menu_last(flag_success_size, btn_data)
@@ -138,12 +142,17 @@ def music(bot, chat_id, btn_data, msg_id_outcome):
     #кнопка, возвращающая на главное меню
     elif btn_data.startswith("2/back_5/"):
         (text, reply_markup) = keyboards.main_menu(chat_id)
-    return text, reply_markup, msg_id_outcome
+
+    text_data = (text, reply_markup, None, 0)
+
+    return text_data, music_data
 
 #ветка кнопок с подписками
-def subscriptions(bot, chat_id, btn_data):
-    text = ''
+def subscriptions(chat_id, btn_data):
     reply_markup = types.InlineKeyboardMarkup()
+    text = None
+    text_data = None
+
     #кнопка, выдающая главное меню со всеми подписками
     if btn_data == "3":
         (text, reply_markup) = keyboards.subscriptions_main()
@@ -180,13 +189,16 @@ def subscriptions(bot, chat_id, btn_data):
     #кнопка, возвращающая в главное меню
     elif btn_data == "3/back_main":
         (text, reply_markup) = keyboards.main_menu(chat_id)
-    return text, reply_markup
 
+    text_data = (text, reply_markup, None, 0)
+
+    return text_data
 
 #ветка кнопок с напоминалками
-def notifications(bot, chat_id, btn_data):
-    text = ''
+def notifications(chat_id, btn_data):
     reply_markup = types.InlineKeyboardMarkup()
+    text = None
+    text_data = None
     flg_need_response = 0
 
     #кнопка выдающая основное меню напоминалок
@@ -227,46 +239,44 @@ def notifications(bot, chat_id, btn_data):
             (text, reply_markup) = keyboards.notif_repeat_interval(notification_id)
         elif edited_value == "activity":
             (text, reply_markup) = keyboards.notif_turn_on_off(notification_id)
+        elif edited_value == "delete":
+            (text, reply_markup) = keyboards.notif_delete(notification_id)
     #ветка с установлением ключевых знаечний напоминалки
     elif btn_data.startswith("4/set/"):
         notification_id = (btn_data.split('/'))[-1]
         target_value = (btn_data.split('/'))[-2]
         target_field = (btn_data.split('/'))[-3]
         repeat_flag = None
-        if target_field == "year_num":
-            text = 'Год установлен'
-        elif target_field == "month_num":
-            text = 'Месяц установлен'
-        elif target_field == "day_num":
-            text = 'День установлен'
-        elif target_field == "hour_num":
-            text = 'Час установлен'
-        elif target_field == "minute_num":
-            text = 'Минута установлена'
-        elif target_field in ["every_year_flg", "every_month_flg", "every_week_flg", "every_day_flg", "every_hour_flg", "every_minute_flg", "repeat_flg"]:
+        if target_field in ["every_year_flg", "every_month_flg", "every_week_flg", "every_day_flg", "every_hour_flg", "every_minute_flg", "repeat_flg"]:
             queries_to_bd.notification_reset_repeat(notification_id)
-            text = 'Периодичность установлена'
             if target_field == "repeat_flg":
                 repeat_flag = 0
             else:
                 repeat_flag = 1
-        elif target_field == "activity_flg":
-            if target_value == '1':
-                text = 'Включено'
-            elif target_value == '0':
-                text = 'Отключено'
-        reply_markup = keyboards.create_inline_kb({"Назад" : "4/1/" + notification_id}, 1)
         queries_to_bd.update_notfications(notification_id, target_field, target_value, repeat_flag)
+        (text, reply_markup) = keyboards.notification_edit(notification_id)
+    #кнопка, удаляющая напоминалку
+    elif btn_data.startswith("4/delete/"):
+        notification_id = (btn_data.split('/'))[-1]
+        queries_to_bd.delete_notification(notification_id)
+        (text, reply_markup) = keyboards.notifications_current(chat_id)
+        text = 'Напоминалка удалена. Все имеющиеся напоминалки:'
+
     #кнопка, возвращающая в главное меню
     elif btn_data == '4/3':
         (text, reply_markup) = keyboards.main_menu(chat_id)
-    return text, reply_markup, flg_need_response
+
+    text_data = (text, reply_markup, None, flg_need_response)
+
+    return text_data
 
 #ветка кнопок с шифрованием
-def crypting(bot, chat_id, btn_data):
-    flg_need_response = 0
-    text = ''
+def crypting(chat_id, btn_data):
     reply_markup = types.InlineKeyboardMarkup()
+    text = None
+    text_data = None
+    flg_need_response = 0
+
     #кнопка, возвращающая выбор языка
     if btn_data == '5':
         (text, reply_markup) = keyboards.crypting_lang()
@@ -291,14 +301,19 @@ def crypting(bot, chat_id, btn_data):
         operation_type = (btn_data.split('/'))[-1]
         lang_code = (btn_data.split('/'))[-2]
         (text, reply_markup) = keyboards.crypting_text(lang_code, operation_type)
-    return text, reply_markup, flg_need_response
 
+    text_data = (text, reply_markup, None, flg_need_response)
+
+    return text_data
 
 #ветка кнопок с изучением японского
-def japanese(bot, chat_id, btn_data, msg_id_outcome):
-    flg_need_response = 0
-    text = ''
+def japanese(chat_id, btn_data):
     reply_markup = types.InlineKeyboardMarkup()
+    text = None
+    text_data = None
+    poll_data = None
+    flg_need_response = 0
+
     #кнопка, возвращающая основное меню по изучению Японского
     if btn_data == '6':
         (text, reply_markup) = keyboards.japanese_main()
@@ -324,22 +339,22 @@ def japanese(bot, chat_id, btn_data, msg_id_outcome):
     elif btn_data.startswith('6/1/1/'):
         decade_number = (btn_data.split('/'))[-1]
         (text, reply_markup) = keyboards.last_japanese_menu_by_certain_kani(decade_number)
-        msg_id_outcome = common_methods.send_kanji_quiz_by(bot, chat_id, decade_number, msg_id_outcome)
+        poll_data = common_methods.get_kanji_quiz(chat_id, decade_number)
     #Квиз со всеми имеющимися кандзи
     elif btn_data == '6/1/2':
         (text, reply_markup) = keyboards.last_japanese_menu_by_full_kani()
-        msg_id_outcome = common_methods.send_kanji_quiz_by(bot, chat_id, None, msg_id_outcome)
+        poll_data = common_methods.get_kanji_quiz(chat_id, None)
     #кнпока "еще" - квиз со всеми имеющимися кандзи
     elif btn_data == '6/1/2/1':
         (text, reply_markup) = keyboards.last_japanese_menu_by_full_kani()
         text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        msg_id_outcome = common_methods.send_kanji_quiz_by(bot, chat_id, None, msg_id_outcome)
+        poll_data = common_methods.get_kanji_quiz(chat_id, None)
     #кнопка "еще" после получения квиза с кандзи по номеру определенного десятка
     elif btn_data.startswith('6/1/3/'):
         decade_number = (btn_data.split('/'))[-1]
         (text, reply_markup) = keyboards.last_japanese_menu_by_certain_kani(decade_number)
         text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        msg_id_outcome = common_methods.send_kanji_quiz_by(bot, chat_id, decade_number, msg_id_outcome)
+        poll_data = common_methods.get_kanji_quiz(chat_id, decade_number)
     #меню с словарем пройденных слов
     elif btn_data == '6/2':
         (text, reply_markup) = keyboards.japanese_my_dict()
@@ -354,12 +369,17 @@ def japanese(bot, chat_id, btn_data, msg_id_outcome):
     elif btn_data == '6/3/1' or btn_data == '6/3/2':
         flg_need_response = 1
         (text, reply_markup) = keyboards.japanese_search_in_warodai_dict()
-    return text, reply_markup, flg_need_response, msg_id_outcome
+
+    text_data = (text, reply_markup, None, flg_need_response)
+
+    return text_data, poll_data
 
 #ветка кнопок с донатом
-def donat(bot, chat_id, btn_data, msg_id_outcome):
-    text = ''
+def donat(chat_id, btn_data):
     reply_markup = types.InlineKeyboardMarkup()
+    text = None
+    text_data = None
+    invoice_data = None
 
     #основное меню доната
     if btn_data == "7":
@@ -411,45 +431,68 @@ def donat(bot, chat_id, btn_data, msg_id_outcome):
             photo_url_out = None #'https://i.ibb.co/3vqH491/ga4wtboduxm-0-Rf5-U-1-1.jpg'#'https://i.ibb.co/pbQLhks/123123-0-Rf5-U.jpg'
             prices_out = 100000
 
-        #отправляет данные для платежа
-        bot.send_invoice(chat_id               = chat_id,
-                         title                 = title_out,
-                         description           = description_out,
-                         invoice_payload       = 'Shut up and take my money!',
-                         provider_token        = my_cfg.provider_token,
-                         currency              = 'RUB',
-                         prices                = [LabeledPrice(label='Выворачивай карманы, к оплате: ', amount= prices_out )],
-                         photo_url             = photo_url_out,
-                         photo_height          = 512,
-                         photo_width           = 512,
-                         photo_size            = 512,
-                         is_flexible           = False,
-                         start_parameter       = 'payment_start',
-                         max_tip_amount        = None,
-                         suggested_tip_amounts = None,
-                         need_email            = True,
-                         send_email_to_provider= True,
-                         provider_data         = '''{
-                                                     "receipt": {"customer": {"email": "ararararagi.payments@gmail.com"},
-                                                                 "items": [
-                                                                           {"description": "'''+description_out+'''",
-                                                                            "quantity": "1",
-                                                                            "amount": {"value": "'''+str(prices_out/100)+'''", "currency": "'''+currency_out+'''"},
-                                                                            "vat_code": "1"}
-                                                                          ]
-                                                             }
-                                                    }'''
-                        )
+        invoice_data = (chat_id,
+                        title_out,
+                        description_out,
+                        'Shut up and take my money!',
+                        my_cfg.provider_token,
+                        'RUB',
+                        [LabeledPrice(label='Выворачивай карманы, к оплате: ', amount= prices_out )],
+                        photo_url_out,
+                        512,
+                        512,
+                        512,
+                        False,
+                        'payment_start',
+                        None,
+                        None,
+                        True,
+                        True,
+                        '''{
+                            "receipt": {"customer": {"email": "ararararagi.payments@gmail.com"},
+                                        "items": [
+                                                  {"description": "''' + description_out + '''",
+                                                   "quantity": "1",
+                                                   "amount": {"value": "'''+str(prices_out/100)+'''", "currency": "'''+currency_out+'''"},
+                                                   "vat_code": "1"}
+                                                 ]
+                                       }
+                           }''')
 
-        #сохраняем ушедшую инфу
-        queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'invoice', description_out, 0, 0)
+    text_data = (text, reply_markup, None, 0)
 
-        #инкрементируем обязательно msg_id
-        msg_id_outcome = msg_id_outcome + 1
+    return text_data, invoice_data
 
-    return text, reply_markup, msg_id_outcome
+#ветка кнопок с конвертацией текста в речь и наоборот
+def text_speech(chat_id, btn_data):
+    reply_markup = types.InlineKeyboardMarkup()
+    text = None
+    text_data = None
+    flg_need_response = 0
+
+    #основное меню преобразований
+    if btn_data == "8":
+        (text, reply_markup) = keyboards.text_speech_main()
+    #возвращает в главное меню
+    elif btn_data == "8/back/0":
+        (text, reply_markup) = keyboards.main_menu(chat_id)
+
+    text_data = (text, reply_markup, None, flg_need_response)
+
+    return text_data
+
+
+
+
+
+
+
+
+
+
 
 #ветка кнопок с оставшимися полезностями
-def something(bot, chat_id, btn_data):
+def something(chat_id, btn_data):
     (text, reply_markup) = keyboards.something_main()
-    return text, reply_markup
+    text_data = (text, reply_markup, None, 0)
+    return text_data

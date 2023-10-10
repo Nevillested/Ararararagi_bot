@@ -5,52 +5,46 @@ import urllib
 import os
 import queries_to_bd
 import random
+from PIL import Image
+from io import BytesIO
 
 ############################### отправляет рандомную пикчу с Шинобу с реактора ###############################
+#получает рандомную ссылку с пикчей Шинобу
 def get_shinobu_pic():
-    url = "https://joyreactor.cc/search/+/" + str(random.randint(1,50)) + "?tags=Oshino+Shinobu%2C+"
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, "html.parser")
-    image_links = []
-    need_images = []
+    url_of_result_image = ''
+    while True:
+        url = "https://joyreactor.cc/search/+/" + str(random.randint(1,50)) + "?tags=Oshino+Shinobu%2C+"
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, "html.parser")
+        image_links = []
+        need_images = []
+        for image in soup.find_all("img"):
+            image_links.append(image["src"])
+        for cur_img_link in image_links:
+            if str(cur_img_link).__contains__('img10.joyreactor.cc/pics/post/'):
+                need_images.append("https:" + cur_img_link)
+        url_of_result_image = random.choice(need_images)
+        response = requests.head(url_of_result_image)
+        if "Content-Length" in response.headers:
+            image_size = int(response.headers["Content-Length"])
+        else:
+            response = requests.get(image_url)
+            if response.status_code == 200:
+                image = Image.open(BytesIO(response.content))
+                image_size = len(response.content)
 
-    for image in soup.find_all("img"):
-        image_links.append(image["src"])
-
-    for cur_img_link in image_links:
-        if str(cur_img_link).__contains__('img10.joyreactor.cc/pics/post/'):
-            need_images.append("https:" + cur_img_link)
-
-    url_of_result_image = random.choice(need_images)
-
+        if image_size < 20000000:
+            break
     return url_of_result_image
 
-def send_shinobu_pic(bot, chat_id, msg_id_outcome):
-
-    url_of_result_image = get_shinobu_pic()
-
-    bot.send_photo(chat_id, photo = url_of_result_image, has_spoiler = True)
-
-    queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'photo', url_of_result_image, 0, 0)
-
-    msg_id_outcome = msg_id_outcome + 1
-
-    return msg_id_outcome
-
 ############################### отправляет рандомный стикер с Шинобу из имеющегося локально набора стикеров ###############################
-def send_shinobu_stick(bot, chat_id, msg_id_outcome):
-    #не очень красиво, что дирректория прописана вручную, но поправлю позже через os get cwd. Попробуй подключиться, если сможешь:)
+def get_shinobu_stick():
+
     all_stickers_dir = "/home/duck/Documents/GitHub/arabot_dev/assets/stickers/"
 
     sticker_dir = all_stickers_dir + random.choice(os.listdir(all_stickers_dir))
 
-    bot.send_sticker(chat_id, sticker = open(sticker_dir, "rb"))
-
-    queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'sticker', sticker_dir, 0, 0)
-
-    msg_id_outcome = msg_id_outcome + 1
-
-    return msg_id_outcome
+    return sticker_dir
 
 ############################### подготовка данных по музыке ###############################
 
@@ -114,20 +108,22 @@ def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):
         cnt_abc = 26
         alphabet = 'yvhzkaucsoqigjxbnfdptrlwme'
 
+    print(key)
     if operation_type == 'encrypt':
 
         for chr in text_to_oper:
 
             index_in_abc = alphabet.find(chr)
 
-            if index_in_abc > 0:
+            if index_in_abc >= 0:
 
                 new_index_in_abc = index_in_abc + int(key)
 
-                if new_index_in_abc > cnt_abc:
+                if new_index_in_abc >= cnt_abc:
 
-                    new_index_in_abc = new_index_in_abc % cnt_abc# new_index_in_abc - cnt_abc
+                    new_index_in_abc = new_index_in_abc % cnt_abc
 
+                print(new_index_in_abc)
                 text_out += alphabet[new_index_in_abc]
 
             else:
@@ -141,7 +137,7 @@ def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):
 
             index_in_abc = alphabet.find(chr)
 
-            if index_in_abc > 0:
+            if index_in_abc >= 0:
 
                 new_index_in_abc = index_in_abc - int(key)
 
@@ -160,7 +156,7 @@ def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):
 
 ############################### Метод отправки квизов ###############################
 #это можно было сделать намного лучше, но у меня руки из жопы обращаться со списками, массивами и кортежами
-def send_kanji_quiz_by(bot, chat_id, decade_number, msg_id_outcome):
+def get_kanji_quiz(chat_id, decade_number):
 
     tuple_of_kanji = queries_to_bd.get_list_of_kanji(decade_number)
 
@@ -192,13 +188,6 @@ def send_kanji_quiz_by(bot, chat_id, decade_number, msg_id_outcome):
 
     text = 'Что это за кандзи ' + question_kaji + ' ?'
 
-    #отправляем квиз
-    bot.send_poll(chat_id, text, options = poll_options_out, correct_option_id  = correct_option_id_out, type = 'quiz')
+    poll_data = (text, poll_options_out, correct_option_id_out)
 
-    #сохраняем данные
-    queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'poll', text, 0, 0)
-
-    #инкрементируем msg_id
-    msg_id_outcome = msg_id_outcome + 1
-
-    return msg_id_outcome
+    return poll_data
