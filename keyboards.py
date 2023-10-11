@@ -591,20 +591,32 @@ def text_speech_result_voice(input_user_text, lang_code):
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 
-
-
-
 ############################# клавиатуры с оставшимися полезностями #############################
 
 #клавиатура основного меню с оставшимися полезностями
 def something_main():
     text = 'Полезности'
-    cnt_object_in_row = 0
-    dict_of_buttons = {}
+    cnt_object_in_row = 2
+    dict_of_buttons = {"Анекдоты" : "9/1", "Погода" : "9/2", "QR-код" : "9/3", "Пикча по тегу" : "9/4", "Рандомное решение (да/нет)" : "9/5", "Назад" : "9/back/0"}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 
+#клавиатура с анекдотом
+def jokes(btn_data, chat_id):
+    new_text = queries_to_bd.get_random_joke()
+    old_text = queries_to_bd.get_last_bot_text_menu(chat_id)
 
+    #если была нажата кнопка "еще", нужно проверить, что старый анекдот не равен текущему игенерировать до тех пор, пока не будет новый
+    if btn_data == "9/1/1":
+        while True:
+            if new_text != old_text:
+                break
+            new_text = queries_to_bd.get_random_joke()
+
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Еще!" : "9/1/1", "Назад" : "9"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return new_text, reply_to
 
 
 

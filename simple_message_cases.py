@@ -120,7 +120,6 @@ def main(bot, message):
                 #вытаскиваем язык. 1 - русский, 2 - английский
                 lang_code = (what_is_current_context.split('/'))[-2]
 
-                print('lang_code = ' + lang_code)
                 #получаем инфо о войсе
                 file_info = bot.get_file(message.voice.file_id)
 

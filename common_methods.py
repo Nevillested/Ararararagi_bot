@@ -112,7 +112,6 @@ def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):
         cnt_abc = 26
         alphabet = 'yvhzkaucsoqigjxbnfdptrlwme'
 
-    print(key)
     if operation_type == 'encrypt':
 
         for chr in text_to_oper:
@@ -127,13 +126,12 @@ def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):
 
                     new_index_in_abc = new_index_in_abc % cnt_abc
 
-                print(new_index_in_abc)
                 text_out += alphabet[new_index_in_abc]
 
             else:
                 text_out += chr
 
-        text_out = 'Зашифрованный текст:\n' + '```' + text_out + '```'
+        text_out = 'Зашифрованный текст:\n' + ' ``` ' + text_out + ' ``` '
 
     elif operation_type == 'decrypt':
 
@@ -154,7 +152,7 @@ def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):
             else:
                 text_out += chr
 
-        text_out = 'Расшифрованный текст:\n' + '```' + text_out + '```'
+        text_out = 'Расшифрованный текст:\n' + ' ``` ' + text_out + ' ``` '
 
     return text_out
 
@@ -229,7 +227,7 @@ def convert_speech_to_text(lang, file_path_ogg):
         rec_lang = "ru-RU"
     elif lang == '2':
         rec_lang = "en-EN"
-    print(rec_lang)
+
     r = sr.Recognizer()
 
     result = ''

@@ -676,3 +676,16 @@ def get_subscriptions_data():
 #обновляет следующее время старта напоминалки
 def update_notification_next_start(notification_id):
     cur.execute("CALL arabot.update_notification_next_start(" + str(notification_id) + ");")
+
+#получает рандомный анекдот
+def get_random_joke():
+    cur.execute("""
+    select ' ``` ' || joke_text || ' ``` '
+      from arabot.jokes
+     ORDER BY random()
+     limit 1
+    """)
+    result_tuple = cur.fetchone()
+    result_str = str(result_tuple[0])
+    return result_str
+
