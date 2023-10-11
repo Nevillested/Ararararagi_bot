@@ -88,7 +88,7 @@ def shinobu(chat_id, btn_data):
     elif btn_data == '1/3':
         (text, reply_markup) = keyboards.main_menu(chat_id)
 
-    text_data = (text, reply_markup, None, 0)
+    text_data = (text, reply_markup, None, 0, 1)
 
     return text_data, photo_data, sticker_data
 
@@ -143,7 +143,7 @@ def music(chat_id, btn_data):
     elif btn_data.startswith("2/back_5/"):
         (text, reply_markup) = keyboards.main_menu(chat_id)
 
-    text_data = (text, reply_markup, None, 0)
+    text_data = (text, reply_markup, None, 0, 1)
 
     return text_data, audio_data
 
@@ -190,7 +190,7 @@ def subscriptions(chat_id, btn_data):
     elif btn_data == "3/back_main":
         (text, reply_markup) = keyboards.main_menu(chat_id)
 
-    text_data = (text, reply_markup, None, 0)
+    text_data = (text, reply_markup, None, 0, 1)
 
     return text_data
 
@@ -266,7 +266,7 @@ def notifications(chat_id, btn_data):
     elif btn_data == '4/3':
         (text, reply_markup) = keyboards.main_menu(chat_id)
 
-    text_data = (text, reply_markup, None, flg_need_response)
+    text_data = (text, reply_markup, None, flg_need_response, 1)
 
     return text_data
 
@@ -302,7 +302,7 @@ def crypting(chat_id, btn_data):
         lang_code = (btn_data.split('/'))[-2]
         (text, reply_markup) = keyboards.crypting_text(lang_code, operation_type)
 
-    text_data = (text, reply_markup, None, flg_need_response)
+    text_data = (text, reply_markup, None, flg_need_response, 1)
 
     return text_data
 
@@ -370,7 +370,7 @@ def japanese(chat_id, btn_data):
         flg_need_response = 1
         (text, reply_markup) = keyboards.japanese_search_in_warodai_dict()
 
-    text_data = (text, reply_markup, None, flg_need_response)
+    text_data = (text, reply_markup, None, flg_need_response, 1)
 
     return text_data, poll_data
 
@@ -459,7 +459,7 @@ def donat(chat_id, btn_data):
                                        }
                            }''')
 
-    text_data = (text, reply_markup, None, 0)
+    text_data = (text, reply_markup, None, 0, 1)
 
     return text_data, invoice_data
 
@@ -490,7 +490,7 @@ def text_speech(chat_id, btn_data):
     elif btn_data in ["8/1/2", "8/2/2"]:
         (text, reply_markup) = keyboards.text_speech_send_me_voice(btn_data)
         flg_need_response = 1
-    text_data = (text, reply_markup, None, flg_need_response)
+    text_data = (text, reply_markup, None, flg_need_response, 1)
     return text_data
 
 
@@ -534,6 +534,6 @@ def something(chat_id, btn_data):
     elif btn_data in ["9/5", "9/5/1"]:
         (text, reply_markup) = keyboards.get_random(btn_data, chat_id)
 
-    text_data = (text, reply_markup, parsemod, flg_need_response)
+    text_data = (text, reply_markup, parsemod, flg_need_response, 1)
     return text_data
 

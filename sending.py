@@ -153,6 +153,7 @@ def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = 
         reply_markup_out = text_data[1]
         parse_mode_out = text_data[2]
         flg_need_response_out = text_data[3]
+        flg_active_menu_message = text_data[4]
 
         #отправляем текст
         bot.send_message(chat_id, text_out, reply_markup = reply_markup_out, parse_mode = parse_mode_out)
@@ -161,7 +162,7 @@ def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = 
         msg_id_outcome += 1
 
         #сохраняем, что отправили
-        queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'menu', text_out, 1, flg_need_response_out)
+        queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'menu', text_out, flg_active_menu_message, flg_need_response_out)
 
 
 

@@ -174,7 +174,7 @@ def main(bot, message):
 
 
     #собираем текстовые данные
-    text_data = (current_result_text, current_reply_markup, current_parsemod, 0)
+    text_data = (current_result_text, current_reply_markup, current_parsemod, 0, 1)
 
     #отправляем все в единый метод отправки
     sending.main(bot, message.chat.id, message.message_id, text_data = text_data, audio_data = audio_data, document_data = document_data, photo_data = photo_data)

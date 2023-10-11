@@ -71,11 +71,11 @@ def catch_edit_msg(message):
 #шедулер
 def scheduler():
     while True:
-        try:
-            send_scheduler.main(MypyBot)
-            time.sleep(60)
-        except Exception as e:
-            print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
+        #try:
+        send_scheduler.main(MypyBot)
+        time.sleep(60)
+        #except Exception as e:
+            #print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
 
 child_thread = threading.Thread(target=scheduler)
 child_thread.start()
