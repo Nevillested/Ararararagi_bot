@@ -1,7 +1,7 @@
 import queries_to_bd
 
 #это метод, через который мы будем отправлять все сообщения. Слишком много отправок разбросано по файлам, поэтому унифицируем это дело
-def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = None, audio_data = None, invoice_data = None, sticker_data = None):
+def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = None, audio_data = None, invoice_data = None, sticker_data = None, document_data = None):
 
     ####################### блок сброса меню в чате с пользователем #######################
 
@@ -54,9 +54,10 @@ def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = 
         photo_url = photo_data[0]
         photo_spoiler = photo_data[1]
         photo_caption = photo_data[2]
+        photo_parse_mode = photo_data[3]
 
         #отправляем фото
-        bot.send_photo(chat_id, photo = photo_url, has_spoiler = photo_spoiler, caption = photo_caption)
+        bot.send_photo(chat_id, photo = photo_url, has_spoiler = photo_spoiler, caption = photo_caption, parse_mode = photo_parse_mode)
 
         #инкрементируем msg_id, тк мы только что отправли msg
         msg_id_outcome += 1
@@ -132,6 +133,18 @@ def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = 
         #сохраняем, что отправили
         queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'invoice', invoice_data[1], 0, 0)
 
+    #отправка документов
+    if document_data != None:
+
+        #оптравляем документ
+        bot.send_document(chat_id, document = open(document_data, 'rb'))
+
+        #инкрементируем msg_id, тк мы только что отправли msg
+        msg_id_outcome += 1
+
+        #сохраняем, что отправили
+        queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'menu', document_data, 0, 0)
+
     #отправка обычного текста
     if text_data != None:
 
@@ -141,6 +154,7 @@ def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = 
         parse_mode_out = text_data[2]
         flg_need_response_out = text_data[3]
 
+        #отправляем текст
         bot.send_message(chat_id, text_out, reply_markup = reply_markup_out, parse_mode = parse_mode_out)
 
         #инкрементируем msg_id, тк мы только что отправли msg

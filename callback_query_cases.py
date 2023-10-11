@@ -63,12 +63,12 @@ def shinobu(chat_id, btn_data):
     #кнопка, открывающая меню с отправкой пикчи с Шинобу
     elif btn_data == '1/1':
         (text, reply_markup) = keyboards.shinobu_pic()
-        photo_data = (common_methods.get_shinobu_pic(), True, 'Лучшая девочка')
+        photo_data = (common_methods.get_shinobu_pic(), True, 'Лучшая девочка', None)
     #кнопка, заново генерирующая тоже меню, где находится, но меняет текст самого меню (чтобы телеграм не давал ошибку) и отправляющая повторно пикчу
     elif btn_data == '1/1/1':
         (text, reply_markup) = keyboards.shinobu_pic()
         text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        photo_data = (common_methods.get_shinobu_pic(), True, 'Держи еще')
+        photo_data = (common_methods.get_shinobu_pic(), True, 'Держи еще', None)
     #кнопка, возвращающая на основное меню Шинобу из меню пикчи с Шинобу
     elif btn_data == '1/1/2':
         (text, reply_markup) = keyboards.shinobu_main()
@@ -515,40 +515,25 @@ def something(chat_id, btn_data):
         (text, reply_markup) = keyboards.jokes(btn_data, chat_id)
         parsemod = 'MarkdownV2'
 
-    elif btn_data == "":
-        None
-    elif btn_data == "":
-        None
-    elif btn_data == "":
-        None
-    elif btn_data == "":
-        None
-    elif btn_data == "":
-        None
-    elif btn_data == "":
-        None
-    elif btn_data == "":
-        None
-    elif btn_data == "":
-        None
+    #выдает погоду
+    elif btn_data == "9/2":
+        (text, reply_markup) = keyboards.weather()
+        flg_need_response = 1
 
+    #выдает QR-код
+    elif btn_data == "9/3":
+        (text, reply_markup) = keyboards.qr_code()
+        flg_need_response = 1
 
+    #выдает пикчу по тегу
+    elif btn_data == "9/4":
+        (text, reply_markup) = keyboards.get_pic_by_teg_main()
+        flg_need_response = 1
 
-    text_data = (text, reply_markup, parsemod, 0)
+    #выдает рандомное решение
+    elif btn_data in ["9/5", "9/5/1"]:
+        (text, reply_markup) = keyboards.get_random(btn_data, chat_id)
+
+    text_data = (text, reply_markup, parsemod, flg_need_response)
     return text_data
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

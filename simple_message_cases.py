@@ -7,11 +7,13 @@ import common_methods
 #основной метод проверки входящих сообщений
 def main(bot, message):
 
-    text_data = ()
+    text_data = None
     audio_data = None
+    document_data = None
     current_result_text = None
     current_reply_markup = telebot.types.InlineKeyboardMarkup()
     current_parsemod = None
+    photo_data = None
 
     #проверяем, задал ли бот вопрос пользователю, на который он обязательно должен ответить текстом в чате
     flg_need_response = queries_to_bd.check_need_response_flg(message.chat.id)
@@ -20,7 +22,7 @@ def main(bot, message):
     if flg_need_response == 1:
 
         #проверяем о чем вообще шла речь, для этого заберем ID последней нажатой кнопки и заодно msg_id, в рамках которого будем редачить сообщение
-        (what_is_current_context, cur_message_id) = queries_to_bd.get_last_pressed_button(message.chat.id)
+        what_is_current_context = queries_to_bd.get_last_pressed_button(message.chat.id)
 
         #проверка, что пользователь прислал текст
         if message.content_type == 'text':
@@ -106,6 +108,28 @@ def main(bot, message):
                 #получает последнее меню по ветке распознавания войса в текст
                 (current_result_text, current_reply_markup) = keyboards.text_speech_result_voice(message.text, lang_code)
 
+            #текстовые данные ожидаются от пользователя по ветке 9/2 только в случае получения названия города для погоды
+            elif what_is_current_context == "9/2":
+
+                #получает последнее меню по ветке распознавания войса в текст
+                (current_result_text, current_reply_markup) = keyboards.weather_last_menu(message.text)
+
+            #текстовые данные ожидаются от пользователя по ветке 9/3 только в случае получения текста, который будем помещен в QR-код
+            elif what_is_current_context == "9/3":
+
+                #получает последнее меню по ветке распознавания войса в текст
+                (current_result_text, current_reply_markup) = keyboards.qr_code_result(message.text)
+
+                document_data = common_methods.create_qr_code(message.text, str(message.chat.id))
+
+            #текстовые данные ожидаются от пользователя по ветке 9/4 только в случае получения от пользователя тегов, по которым будем искать пикчу на реакторе
+            elif what_is_current_context == "9/4":
+
+                #получает последнее меню по ветке получения пикчи по тегу
+                (current_result_text, current_reply_markup) = keyboards.get_pic_by_teg_result()
+
+                #получает адрес изображения, спойлер и подпись к нему
+                photo_data = common_methods.get_pic_by_teg(message.text)
 
             #если тип контента не подходит ни к одному из вариантов, которые ждет бот - сообщаем юзеру об этом
             else:
@@ -153,4 +177,4 @@ def main(bot, message):
     text_data = (current_result_text, current_reply_markup, current_parsemod, 0)
 
     #отправляем все в единый метод отправки
-    sending.main(bot, message.chat.id, message.message_id, text_data = text_data, audio_data = audio_data)
+    sending.main(bot, message.chat.id, message.message_id, text_data = text_data, audio_data = audio_data, document_data = document_data, photo_data = photo_data)

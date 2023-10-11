@@ -4,6 +4,7 @@ import queries_to_bd
 import datetime
 import calendar
 import common_methods
+import random
 
 #метод для создания инлайн-клавиатуры. На вход получает словарь из пары "ид кнопки-название кнопки" и количество кнопок в строке, а на выходе отдает саму клавиатуру
 def create_inline_kb(dict_of_buttons, cnt_object_in_row):
@@ -618,12 +619,74 @@ def jokes(btn_data, chat_id):
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return new_text, reply_to
 
+#клавиатура с погодой
+def weather():
+    text = 'Погода на сегодня. Пришли название города'
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Назад" : "9"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
 
+#клавиатура с результатом погоды
+def weather_last_menu(city_name):
+    text = city_name + '\n' + common_methods.current_weather(city_name)
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Назад" : "9/2"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
 
+#клавиатура с предложением создать QR-кодом
+def qr_code():
+    text = 'Введи текст, который мы поместим в QR-код'
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Назад" : "9"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
 
+#клавиатура с результатом создания QR-кода
+def qr_code_result(user_text):
+    text = 'Мы зашифровали в QR-код:\n"'+ user_text +'"'
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Назад" : "9/3"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
 
+#клавиатура с предложением ввести тег для получение пикчи
+def get_pic_by_teg_main():
+    text = 'Окей, напиши в чат, что ищем'
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Назад" : "9"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
 
+#клавиатура с результатом пикчи с реактора
+def get_pic_by_teg_result():
+    text = 'Держи'
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Назад" : "9/4"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
 
+#клавиатура с рандомным ответом
+def get_random(btn_data, chat_id):
+    old_text = queries_to_bd.get_last_bot_text_menu(chat_id)
+    print('old_text: '+old_text)
+    new_text = None
 
+    if random.randint(0,9) < 5:
+        new_text = "Да!"
+    else:
+        new_text = "Нет!"
+
+    #если была нажата кнопка "еще", нужно проверить, что старый ответ не равен текущему. Если равен - надо мальца видоизменить
+    if btn_data == "9/5/1":
+        if new_text == old_text:
+            new_text += '!'
+
+    print('new_text: '+new_text)
+    cnt_object_in_row = 2
+    dict_of_buttons = {"Еще разок!" : "9/5/1", "Назад" : "9"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return new_text, reply_to
 
 

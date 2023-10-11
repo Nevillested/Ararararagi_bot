@@ -435,18 +435,7 @@ def get_last_pressed_button(chat_id):
     result_tuple = cur.fetchone()
     button_id = str(result_tuple[0])
 
-    cur.execute("""
-    SELECT message_id
-      FROM arabot.outcome_data
-     WHERE chat_id = """ + str(chat_id) + """
-     ORDER BY id desc
-     LIMIT 1
-    """)
-
-    result_tuple = cur.fetchone()
-    message_id = int(result_tuple[0])
-
-    return button_id, message_id
+    return button_id
 
 #создает новую напоминалку
 def create_new_notification(chat_id, notif_name):
