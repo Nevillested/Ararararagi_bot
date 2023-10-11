@@ -54,22 +54,32 @@ def main(MypyBot):
                     sending.main(MypyBot, subscription_chat_id, last_msg_id, None, photo_data, None, None, None, None)
 
                 #все остальные рассылки отправляются в 22:00
-                elif cur_date_time.hour == 19 and cur_date_time.minute == 00:
+                elif cur_date_time.hour == 20 and cur_date_time.minute == 00:
 
-                    text = ''
+                    text = None
 
                     #запрашиваем данные для рассылки поздравлений с международным праздником
                     if str(subscription_id) == '2':
 
-                        text = 'Это рассылка международных праздников'
+                        text = queries_to_bd.get_current_holiday()
+
+                        text_data = (text, None, None, 0)
+
+                        last_msg_id = queries_to_bd.get_last_msg_id()
+
+                        #если текст подписки не пустой (а он может быть пустым, например из-за того, что сегодня нет международного праздника
+                        if text != None:
+                            sending.main(MypyBot, notification_chat_id, last_msg_id, text_data, None, None, None, None, None)
 
                     #запрашиваем данные для рассылки комплимента
                     elif str(subscription_id) == '3':
 
-                        text = 'Это рассылка комплиментов'
+                        #получает рандомный комплмент
+                        text = queries_to_bd.get_random_compliment()
 
-                    last_msg_id = queries_to_bd.get_last_msg_id()
+                        text_data = (text, None, None, 0)
 
-                    text_data = (text, None, None, 0)
+                        last_msg_id = queries_to_bd.get_last_msg_id()
 
-                    sending.main(MypyBot, notification_chat_id, last_msg_id, text_data, None, None, None, None, None)
+                        sending.main(MypyBot, notification_chat_id, last_msg_id, text_data, None, None, None, None, None)
+

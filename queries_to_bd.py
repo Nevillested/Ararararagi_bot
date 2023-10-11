@@ -678,3 +678,27 @@ def get_random_joke():
     result_str = str(result_tuple[0])
     return result_str
 
+#получает рандомный комплимент
+def get_random_compliment():
+    cur.execute("""
+    select text
+      from arabot.compliments
+     ORDER BY random()
+     limit 1
+    """)
+    result_tuple = cur.fetchone()
+    result_str = str(result_tuple[0])
+    return result_str
+
+#получает текущий международный праздник
+def get_current_holiday():
+    cur.execute("""
+    SELECT text_holiday
+      FROM public.international_holiday
+     WHERE DATE_TRUNC('day', date_holiday) = DATE_TRUNC('day', now())
+    """)
+    result_tuple = cur.fetchone()
+    result_str = None
+    if result_tuple != None:
+        result_str = str(result_tuple[0])
+    return result_str
