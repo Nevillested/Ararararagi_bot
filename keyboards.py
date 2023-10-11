@@ -499,7 +499,6 @@ def japanese_search_in_warodai_dict():
 #клавиатура с результатами поиска по warodai словарю
 def japanese_warodai_dict_translate(jap_text, rus_text):
     result_of_search = queries_to_bd.search_in_warodai_dict_translate(jap_text, rus_text)
-    print(result_of_search)
     text = ''
     if result_of_search == 'None':
         text = 'Мы ничего не нашли, извиняй'
@@ -530,21 +529,67 @@ def donat_invoice():
 
 ############################# клавиатуры с конвертацией текста в речь и наоборот #############################
 
-#основная клавиатура
-def text_speech_main():
-    text = 'Меню преобразования войса в текст и наоборот'
+#возвращает выбор языка (основная клавиатура)
+def text_speech_lang():
+    text = 'Меню преобразования войса в текст и наоборот\nВыбери язык'
     cnt_object_in_row = 2
-    dict_of_buttons = {"Текст в войс" : "8/1", "Войс в текст" : "8/2"}
+    dict_of_buttons = {"RU" : "8/1", "EN" : "8/2"}
     dict_of_buttons["Назад"] = "8/back/0"
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 
+#возвращает выбор типа операции
+def text_speech_operation_type(btn_data):
+    text = 'Что собираемся преобразовывать?'
+    cnt_object_in_row = 2
+    dict_of_buttons = {"Текст в войс" : btn_data + "/1", "Войс в текст" : btn_data + "/2"}
+    dict_of_buttons["Назад"] = "8/back/1"
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
 
+#возвращает предложение прислать текст, который будет преобразован в войс
+def text_speech_send_me_text(btn_data):
+    lang_id = (btn_data.split('/'))[-2]
+    lang = None
+    if lang_id == '1':
+        lang = 'русском'
+    elif lang_id == '2':
+        lang = 'английском'
+    text = 'А теперь пришли текст на ' + lang + ' языке, который должен быть преобразован в войс'
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Назад" : (btn_data)[:(btn_data.rfind('/'))]} #обрезает в строке все, что находится после последнего символа '/', включая его
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
 
+#возвращает предложение прислать аудио, который будет преобразован в текст
+def text_speech_send_me_voice(btn_data):
+    lang_id = (btn_data.split('/'))[-2]
+    lang = None
+    if lang_id == '1':
+        lang = 'русском'
+    elif lang_id == '2':
+        lang = 'английском'
+    text = 'А теперь пришли войс на ' + lang + ' языке, который должен быть преобразован в текст'
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Назад" : (btn_data)[:(btn_data.rfind('/'))]} #обрезает в строке все, что находится после последнего символа '/', включая его
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
 
+#последнее меню по ветке распознавания войса в текст
+def text_speech_result_text(recognized_text, lang_code):
+    text = 'Результат распознавания текста в войсе:\n"' + recognized_text + '"'
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Назад" : "8/" + str(lang_code)}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
 
-
-
+#последнее меню по ветке преобразования текста в войс
+def text_speech_result_voice(input_user_text, lang_code):
+    text = 'Лови результат преобразования в войс твоего текста:\n"' + input_user_text + '"'
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Назад" : "8/" + str(lang_code)}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
 
 
 

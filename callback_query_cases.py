@@ -14,7 +14,7 @@ def case_main(call, bot):
     text_data = None
     photo_data = None
     poll_data = None
-    music_data = None
+    audio_data = None
     invoice_data = None
     sticker_data = None
 
@@ -23,7 +23,7 @@ def case_main(call, bot):
         (text_data, photo_data, sticker_data) = shinobu(current_chat_id, current_btn_name)
 
     elif current_btn_name.startswith('2'):
-        (text_data, music_data) = music(current_chat_id, current_btn_name)
+        (text_data, audio_data) = music(current_chat_id, current_btn_name)
 
     elif current_btn_name.startswith('3'):
         (text_data) = subscriptions(current_chat_id, current_btn_name)
@@ -47,7 +47,7 @@ def case_main(call, bot):
         (text_data) = something(current_chat_id, current_btn_name)
 
     #отправляем все в единый метод отправки
-    sending.main(bot, call.message.chat.id, call.message.message_id, text_data, photo_data, poll_data, music_data, invoice_data, sticker_data)
+    sending.main(bot, call.message.chat.id, call.message.message_id, text_data, photo_data, poll_data, audio_data, invoice_data, sticker_data)
 
 #ветка кнопок с Шинобу
 def shinobu(chat_id, btn_data):
@@ -97,7 +97,7 @@ def music(chat_id, btn_data):
     reply_markup = types.InlineKeyboardMarkup()
     text = None
     text_data = None
-    music_data = None
+    audio_data = None
 
     #кнопка, открывающая меню со всеми исполнителями, сгруппированных по первому символу
     if btn_data == '2':
@@ -118,7 +118,7 @@ def music(chat_id, btn_data):
         flag_success_size = -1
         if file_size < 50:
             flag_success_size = 1
-            music_data = full_song_path
+            audio_data = full_song_path
         else:
             flag_success_size = 0
         (text, reply_markup) = keyboards.music_menu_last(flag_success_size, btn_data)
@@ -145,7 +145,7 @@ def music(chat_id, btn_data):
 
     text_data = (text, reply_markup, None, 0)
 
-    return text_data, music_data
+    return text_data, audio_data
 
 #ветка кнопок с подписками
 def subscriptions(chat_id, btn_data):
@@ -470,25 +470,33 @@ def text_speech(chat_id, btn_data):
     text_data = None
     flg_need_response = 0
 
-    #основное меню преобразований
+    #основное меню преобразований - выбор языка
     if btn_data == "8":
-        (text, reply_markup) = keyboards.text_speech_main()
+        (text, reply_markup) = keyboards.text_speech_lang()
+
     #возвращает в главное меню
     elif btn_data == "8/back/0":
         (text, reply_markup) = keyboards.main_menu(chat_id)
+    #возвращает восновное меню преобразований - выбор языка
+    elif btn_data == "8/back/1":
+        (text, reply_markup) = keyboards.text_speech_lang()
+
+    #возвращает выбор типа операции
+    elif btn_data in ["8/1" , "8/2"]:
+        (text, reply_markup) = keyboards.text_speech_operation_type(btn_data)
+
+    #возвращает предложение прислать текст, который будет преобразован в войс
+    elif btn_data in ["8/1/1", "8/2/1"]:
+        (text, reply_markup) = keyboards.text_speech_send_me_text(btn_data)
+        flg_need_response = 1
+
+    #возвращает предложение прислать аудио, который будет преобразован в текст
+    elif btn_data in ["8/1/2", "8/2/2"]:
+        (text, reply_markup) = keyboards.text_speech_send_me_voice(btn_data)
+        flg_need_response = 1
 
     text_data = (text, reply_markup, None, flg_need_response)
-
     return text_data
-
-
-
-
-
-
-
-
-
 
 
 #ветка кнопок с оставшимися полезностями

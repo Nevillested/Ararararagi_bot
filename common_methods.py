@@ -7,6 +7,10 @@ import queries_to_bd
 import random
 from PIL import Image
 from io import BytesIO
+from gtts import gTTS
+import subprocess
+import speech_recognition as sr
+
 
 ############################### отправляет рандомную пикчу с Шинобу с реактора ###############################
 #получает рандомную ссылку с пикчей Шинобу
@@ -191,3 +195,52 @@ def get_kanji_quiz(chat_id, decade_number):
     poll_data = (text, poll_options_out, correct_option_id_out)
 
     return poll_data
+
+############################### Методы преобразования текста в речь и наоборот ###############################
+
+#преобразует текст в речь
+def convert_text_to_speech(chat_id, text_in, lang):
+
+    rec_lang = None
+
+    if lang == '1':
+        rec_lang = "ru"
+    elif lang == '2':
+        rec_lang = "en"
+
+    myobj = gTTS(text=text_in, lang=rec_lang, slow=False)
+
+    myobj.save("assets/temp/convert_text_to_speech" + chat_id + ".ogg")
+
+    result = os.getcwd() + r'/assets/temp/convert_text_to_speech' + chat_id + '.ogg'
+
+    return result
+
+#преобразует речь в текст
+def convert_speech_to_text(lang, file_path_ogg):
+
+    file_path_wav = file_path_ogg.replace('.ogg', '.wav')
+
+    process = subprocess.run(['ffmpeg','-y', '-i', file_path_ogg, file_path_wav])
+
+    rec_lang = None
+
+    if lang == '1':
+        rec_lang = "ru-RU"
+    elif lang == '2':
+        rec_lang = "en-EN"
+    print(rec_lang)
+    r = sr.Recognizer()
+
+    result = ''
+
+    hellow = sr.AudioFile(file_path_wav)
+
+    with hellow as source:
+        audio = r.record(source)
+    try:
+       result = r.recognize_google(audio, language = rec_lang)
+    except Exception as e:
+        print("Exception: "+str(e))
+
+    return result

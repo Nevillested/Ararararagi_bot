@@ -198,6 +198,15 @@ def get_last_bot_text_menu(chat_id):
     tuple_data = cur.fetchone()
     return tuple_data[0] + '!'
 
+#получает последний зафисированный msg_id
+def get_last_msg_id():
+    cur.execute("""
+    select max(message_id)
+      from arabot.outcome_data
+    """)
+    tuple_data = cur.fetchone()
+    return int(tuple_data[0])
+
 #наполняем таблицу с музыкой, проставляем ID будущих кнопок
 def gen_music_data(list_data_of_music_files):
     #очищаем таблицу

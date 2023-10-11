@@ -25,7 +25,7 @@ CONTENT_TYPES = ["text", "audio", "document", "photo", "sticker", "video", "vide
 #хэндер простых сообщений   
 @MypyBot.message_handler(content_types=CONTENT_TYPES)
 def start_message(message):
-    try:
+    #try:
         print(f"Пришло сообщение от: {message.from_user.username}\nТип сообщения: {str(message.content_type)}\nТекст сообщения: {message.text}\n")
 
         #проверяет пользователя в бд, если есть-обновляет данные, если нет-добавляет данные
@@ -37,13 +37,13 @@ def start_message(message):
         #уходим в кейсы всевозможных простых сообщений
         simple_message_cases.main(MypyBot, message)
         
-    except Exception as e:
-        print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
+    #except Exception as e:
+        #print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
     
 #хэндлер нажатий на кнопки
 @MypyBot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
-    try:
+    #try:
         
         print(f"{call.from_user.username} нажал кнопку {call.data}.\n")
         
@@ -53,8 +53,8 @@ def callback_inline(call):
         #уходим в кейсы всевозможных кнопок
         callback_query_cases.case_main(call, MypyBot)
         
-    except Exception as e:
-        print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
+    #except Exception as e:
+        #print(f'В {str(inspect.stack()[0][3])} произошла ошибка: \n' + str(e))
 
 #хэндлер редактирования сообщений
 @MypyBot.edited_message_handler(content_types="text")

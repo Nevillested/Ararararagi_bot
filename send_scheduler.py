@@ -2,6 +2,7 @@ import keyboards
 import common_methods
 import queries_to_bd
 import datetime
+import sending
 
 def main(MypyBot):
         cur_date_time = datetime.datetime.now()
@@ -18,17 +19,15 @@ def main(MypyBot):
 
                 notification_id = row[0]
 
-                notification_text = "Ты просил напоминть:\n'" + row[1] + "'"
+                notification_text = "Ты просил напомнить:\n" + row[1]
 
                 notification_chat_id = row[2]
 
-                try:
+                last_msg_id = queries_to_bd.get_last_msg_id()
 
-                    MypyBot.send_message(notification_chat_id, notification_text)
+                text_data = (notification_text, None, None, 0)
 
-                except Exception as e:
-
-                    print('Не отправлено сообщение этому пользователю: ' + str(notification_chat_id) + '. Текст ошибки:\n' + str(e))
+                sending.main(MypyBot, notification_chat_id, last_msg_id, text_data, None, None, None, None, None)
 
                 queries_to_bd.update_notification_next_start(notification_id)
 
@@ -38,7 +37,7 @@ def main(MypyBot):
             #прогоняем все рассылки, которые забрали
             for row in list_users_subscriptions:
 
-                chat_id = row[0]
+                subscription_chat_id = row[0]
 
                 subscription_id = row[1]
 
@@ -48,14 +47,11 @@ def main(MypyBot):
                     #получаем рандомный url пикчи с Шинобу
                     url_of_result_image = common_methods.get_shinobu_pic()
 
-                    try:
+                    last_msg_id = queries_to_bd.get_last_msg_id()
 
-                        #отправляем ее
-                        MypyBot.send_photo(chat_id, photo = url_of_result_image, has_spoiler = True, caption = 'Это ежечасная рассылка лучшей девочки')
+                    photo_data = (url_of_result_image, True, 'Это ежечасная рассылка лучшей девочки')
 
-                    except Exception as e:
-
-                        print('Не отправлено сообщение этому пользователю: ' + str(chat_id) + '. Текст ошибки:\n' + str(e))
+                    sending.main(MypyBot, subscription_chat_id, last_msg_id, None, photo_data, None, None, None, None)
 
                 #все остальные рассылки отправляются в 22:00
                 elif cur_date_time.hour == 19 and cur_date_time.minute == 00:
@@ -72,10 +68,8 @@ def main(MypyBot):
 
                         text = 'Это рассылка комплиментов'
 
-                    try:
+                    last_msg_id = queries_to_bd.get_last_msg_id()
 
-                        MypyBot.send_message(chat_id, text)
+                    text_data = (text, None, None, 0)
 
-                    except Exception as e:
-
-                        print('Не отправлено сообщение этому пользователю: ' + str(chat_id) + '. Текст ошибки:\n' + str(e))
+                    sending.main(MypyBot, notification_chat_id, last_msg_id, text_data, None, None, None, None, None)

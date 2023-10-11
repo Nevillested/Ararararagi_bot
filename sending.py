@@ -1,7 +1,7 @@
 import queries_to_bd
 
 #это метод, через который мы будем отправлять все сообщения. Слишком много отправок разбросано по файлам, поэтому унифицируем это дело
-def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = None, music_data = None, invoice_data = None, sticker_data = None):
+def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = None, audio_data = None, invoice_data = None, sticker_data = None):
 
     ####################### блок сброса меню в чате с пользователем #######################
 
@@ -65,7 +65,7 @@ def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = 
         queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'photo', photo_url, 0, 0)
 
     #отправка музыки
-    if music_data != None:
+    if audio_data != None:
 
         #отправляем сообщение, чтобы подождал мальца, тк файл весит много
         bot.send_message(chat_id, 'Сейчас прилетит, погоди')
@@ -77,13 +77,13 @@ def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = 
         queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'text', 'Сейчас прилетит, погоди', 0, 0)
 
         #отправляем аудио-файл
-        bot.send_audio(chat_id, audio=open(music_data, 'rb'))
+        bot.send_audio(chat_id, audio=open(audio_data, 'rb'))
 
         #инкрементируем msg_id, тк мы только что отправли msg
         msg_id_outcome += 1
 
         #сохраняем, что отправили
-        queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'music', music_data, 0, 0)
+        queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'audio', audio_data, 0, 0)
 
     #отправка квиза
     if poll_data != None:
