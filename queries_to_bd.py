@@ -5,8 +5,28 @@ conn = psycopg2.connect(my_cfg.pg_sql_con_string)
 conn.autocommit = True
 cur = conn.cursor()
 
+#проверяет были ли сообщения в бд с пользователем
+def check_msg(chat_id):
+    cur.execute("""
+    select count(*)
+      from arabot.outcome_data
+     where chat_id = """ + str(chat_id) + """
+     """)
+    tuple_data = cur.fetchone()
+    return int(tuple_data[0])
+
+#проверяет пользователя в бд
+def check_user(chat_id):
+    cur.execute("""
+    select count(*)
+      from arabot.users
+     where chat_id = """ + str(chat_id) + """
+     """)
+    tuple_data = cur.fetchone()
+    return int(tuple_data[0])
+
 #проверяет пользователя в бд, если есть-обновляет данные, если нет-добавляет данные
-def check_user(data_from_message):
+def update_user(data_from_message):
     chat_id = str(data_from_message.chat.id)
     first_name = ''
     username = ''
@@ -163,28 +183,6 @@ def save_outcome_data(chat_id, msg_id, msg_type, text, flg_main_menu, flg_need_r
     )
     """)
 
-#получает список айдишников сообщений, в рамках которых открыты меню у пользователя
-def get_msg_of_open_menu(chat_id):
-    cur.execute("""
-    select distinct message_id
-      from arabot.outcome_data
-     where chat_id = """ + str(chat_id) + """
-       and activity_menu_flg = 1
-    """)
-    tuple_data = cur.fetchall()
-    array_messages = []
-    for item in tuple_data:
-        array_messages.append(item[0])
-    return array_messages
-
-#обновляем, что нет активных меню в текущий момент
-def close_old_opening_menu(chat_id):
-    cur.execute("""
-    update arabot.outcome_data
-       set activity_menu_flg = 0
-    where chat_id = """ + str(chat_id) + """
-    """)
-
 #получает последнее сообщение, которое отправил пользователю и немного редактирует его. В данном случае - добавляет восклицательный знак.
 #Это необходимо, т.к. если есть кейс, что пользователь просит в рамках одного меню еще пикчу (нажимает на кнопку "еще"), то телеграму нельзя отправить тоже самое меню. Оно должно быть другим. Иначе - телега даёт ошибку.
 def get_last_bot_text_menu(chat_id):
@@ -198,14 +196,37 @@ def get_last_bot_text_menu(chat_id):
     tuple_data = cur.fetchone()
     return tuple_data[0] + '!'
 
+#получает последний зафисированный msg_id меню
+def get_menu_msg_id(chat_id):
+    cur.execute("""
+    select case when max(message_id) is null then -1 else max(message_id) end
+      from arabot.outcome_data
+     where message_type = 'menu'
+       and chat_id =  """ + str(chat_id) + """
+       and activity_menu_flg = 1
+    """)
+    tuple = cur.fetchall()
+    rows = []
+    for item in tuple:
+        rows.append(item[0])
+    return rows
+
 #получает последний зафисированный msg_id
 def get_last_msg_id():
     cur.execute("""
-    select max(message_id)
+    select case when max(message_id) is null then -1 else max(message_id) end
       from arabot.outcome_data
     """)
     tuple_data = cur.fetchone()
     return int(tuple_data[0])
+
+#проставляем msg_id как неактивное
+def set_msg_menu_as_inactive(msg_id):
+    cur.execute("""
+    update arabot.outcome_data
+       set activity_menu_flg = 0
+    where message_id = """ + str(msg_id) + """
+    """)
 
 #наполняем таблицу с музыкой, проставляем ID будущих кнопок
 def gen_music_data(list_data_of_music_files):

@@ -3,35 +3,6 @@ import queries_to_bd
 #это метод, через который мы будем отправлять все сообщения. Слишком много отправок разбросано по файлам, поэтому унифицируем это дело
 def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = None, audio_data = None, invoice_data = None, sticker_data = None, document_data = None):
 
-    ####################### блок сброса меню в чате с пользователем #######################
-
-    #проверяем есть ли с чатом открытые менюхи
-    msg_list = queries_to_bd.get_msg_of_open_menu(chat_id)
-
-    #если уже есть открытые меню...
-    if len(msg_list) != 0:
-
-        #проходится по всем msg_id этих меню
-        for msg in msg_list:
-
-            try:
-                #и пытается их удалить
-                bot.delete_message(chat_id = chat_id, message_id = msg)
-
-            except:
-
-                try:
-                    #может не получится удалить, тк прошло больше 48 часов, в таком случае, редактируем их
-                    bot.edit_message_text(chat_id = chat_id, message_id = msg, text = 'Потрачено')
-
-                except:
-                    print('Не удалось удалить или отредактировать msg_id: ' + str(msg) + ' chat_id: ' + str(chat_id))
-
-    #обновляем, что нет активных меню в текущий момент
-    queries_to_bd.close_old_opening_menu(chat_id)
-
-    ####################### блок отправки #######################
-
     #задаем по умолчанию
     msg_id_outcome = msg_id
 

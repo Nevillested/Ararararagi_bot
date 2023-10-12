@@ -281,7 +281,7 @@ def notif_minutes(notification_id):
         min_start = 0
         if current_year == selected_year and current_month == selected_month and current_day == selected_day and current_hour == selected_hour:
             min_start = datetime.datetime.now().minute
-        for i in range(min_start + 1, 60):
+        for i in range(min_start, 60):
             dict_key = '4/set/minute_num/' + str(i) + '/' + notification_id
             dict_value = str(i)
             keyboard_dict[dict_value] = dict_key
