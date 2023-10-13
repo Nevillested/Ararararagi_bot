@@ -226,9 +226,9 @@ def convert_text_to_speech(chat_id, text_in, lang):
 
     myobj = gTTS(text=text_in, lang=rec_lang, slow=False)
 
-    myobj.save("assets/temp/convert_text_to_speech" + chat_id + ".ogg")
+    myobj.save("assets/temp/convert_text_to_speech/" + chat_id + ".ogg")
 
-    result = os.getcwd() + r'/assets/temp/convert_text_to_speech' + chat_id + '.ogg'
+    result = os.getcwd() + r'/assets/temp/convert_text_to_speech/' + chat_id + '.ogg'
 
     return result
 
@@ -254,10 +254,7 @@ def convert_speech_to_text(lang, file_path_ogg):
 
     with hellow as source:
         audio = r.record(source)
-    try:
-       result = r.recognize_google(audio, language = rec_lang)
-    except Exception as e:
-        print("Exception: "+str(e))
+    result = r.recognize_google(audio, language = rec_lang)
 
     return result
 

@@ -5,6 +5,19 @@ conn = psycopg2.connect(my_cfg.pg_sql_con_string)
 conn.autocommit = True
 cur = conn.cursor()
 
+#логирование ошибок
+def save_error(error_text):
+    cur.execute("""
+    INSERT INTO arabot.error_log
+    (
+     error_text
+    )
+    VALUES
+    (
+     '""" + error_text.replace("'", "") + """'
+    )
+    """)
+
 #проверяет были ли сообщения в бд с пользователем
 def check_msg(chat_id):
     cur.execute("""

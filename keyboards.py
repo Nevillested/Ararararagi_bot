@@ -670,7 +670,6 @@ def get_pic_by_teg_result():
 #клавиатура с рандомным ответом
 def get_random(btn_data, chat_id):
     old_text = queries_to_bd.get_last_bot_text_menu(chat_id)
-    print('old_text: '+old_text)
     new_text = None
 
     if random.randint(0,9) < 5:
@@ -683,7 +682,6 @@ def get_random(btn_data, chat_id):
         if new_text == old_text:
             new_text += '!'
 
-    print('new_text: '+new_text)
     cnt_object_in_row = 2
     dict_of_buttons = {"Еще разок!" : "9/5/1", "Назад" : "9"}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
