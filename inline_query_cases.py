@@ -1,7 +1,6 @@
 from telebot import types
 import common_methods
 import requests
-import emoji
 import urllib.parse
 
 def main(bot, query):

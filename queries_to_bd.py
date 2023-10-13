@@ -95,80 +95,70 @@ def update_user(data_from_message):
     """)
 
 #добавляет входящее сообщение в бд
-def save_simple_message(data_from_message):
-    chat_id = str(data_from_message.chat.id)
-    message_id = str(data_from_message.message_id)
-    message_type = "'" + str(data_from_message.content_type) + "'"
-    message_txt_data = ''
-    if data_from_message.text == None:
-        message_txt_data = "Null"
+def save_data(chat_id, msg_id, type, btn_id = None, msg_txt = None):
+    chat_id = str(chat_id)
+    msg_id = str(msg_id)
+    type = "'" + str(type) + "'"
+    btn_data = None
+    msg_txt_data = None
+
+    if btn_id == None:
+        btn_data = "Null"
     else:
-        message_txt_data = "'" + (str(data_from_message.text)).replace("'",'"') + "'"
+        btn_data = "'" + btn_id + "'"
+
+    if msg_txt == None:
+        msg_txt_data = "Null"
+    else:
+        msg_txt_data = "'" + (str(msg_txt)).replace("'",'"') + "'"
+
     cur.execute("""
-    INSERT INTO arabot.income_simple_message
+    INSERT INTO arabot.income_data
     (
      chat_id,
      message_id,
      message_type,
-     message_txt_data
+     button_id,
+     msg_txt_data
     )
     VALUES
     (
      """ + chat_id + """,
-     """ + message_id + """,
-     """ + message_type + """,
-     """ + message_txt_data + """
+     """ + msg_id + """,
+     """ + type + """,
+     """ + btn_data + """,
+     """ + msg_txt_data + """
     )
     """)
 
-#сохраняет входящую инфу о нажатой пользователем кнопке
-def save_callback_query(call):
-    cur.execute("""
-    INSERT INTO arabot.income_callback_query
-    (
-     chat_id,
-     message_id,
-     button_id
-    )
-    VALUES
-    (
-     """ + str(call.message.chat.id) + """,
-     """ + str(call.message.message_id) + """,
-     '""" + str(call.data) + """'
-    )""")
-
-
 #добавляет новую версию сообщения
-def insert_new_smiple_message_ver(data_from_message):
-    chat_id = str(data_from_message.chat.id)
+def insert_new_msg_ver(data_from_message):
     message_id = str(data_from_message.message_id)
-    message_type = "'" + str(data_from_message.content_type) + "'"
-    message_txt_data = ''
+    msg_txt_data = None
     if data_from_message.text == None:
-        message_txt_data = "Null"
+        msg_txt_data = "Null"
     else:
-        message_txt_data = "'" + (str(data_from_message.text)).replace("'",'"') + "'"
+        msg_txt_data = "'" + (str(data_from_message.text)).replace("'",'"') + "'"
     cur.execute("""
-    INSERT INTO arabot.income_simple_message
+    INSERT INTO arabot.income_data
     (
      chat_id,
      message_id,
-     dt_created,
-     dt_updated,
+     dt_insert,
+     dt_update,
      message_version,
      message_type,
-     message_txt_data
+     msg_txt_data
     )
     select chat_id,
            message_id,
-           dt_created,
+           dt_insert,
            current_timestamp,
            message_version + 1,
            message_type,
-           """ + message_txt_data + """
-      from arabot.income_simple_message
-     where chat_id = """ + chat_id + """
-       and message_id = """ + message_id + """
+           """ + msg_txt_data + """
+      from arabot.income_data
+     where message_id = """ + message_id + """
      order by message_version desc
      limit 1
     """)
@@ -212,7 +202,7 @@ def get_last_bot_text_menu(chat_id):
 #получает последний зафисированный msg_id меню
 def get_menu_msg_id(chat_id):
     cur.execute("""
-    select case when max(message_id) is null then -1 else max(message_id) end
+    select message_id
       from arabot.outcome_data
      where message_type = 'menu'
        and chat_id =  """ + str(chat_id) + """
@@ -227,8 +217,13 @@ def get_menu_msg_id(chat_id):
 #получает последний зафисированный msg_id
 def get_last_msg_id():
     cur.execute("""
-    select case when max(message_id) is null then -1 else max(message_id) end
-      from arabot.outcome_data
+    select max(a.message_id)
+    from ( select message_id
+             from arabot.income_data
+            union all
+           select message_id
+             from arabot.outcome_data
+         ) as a
     """)
     tuple_data = cur.fetchone()
     return int(tuple_data[0])
@@ -461,8 +456,9 @@ def get_last_pressed_button(chat_id):
     #забираем последний BUTTON ID
     cur.execute("""
     SELECT button_id
-      FROM arabot.income_callback_query
+      FROM arabot.income_data
      WHERE chat_id = """ + str(chat_id) + """
+       AND message_type = 'button'
      ORDER BY id desc
      LIMIT 1
     """)

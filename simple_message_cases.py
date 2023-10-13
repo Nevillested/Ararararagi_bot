@@ -14,6 +14,9 @@ def main(bot, message):
     current_reply_markup = telebot.types.InlineKeyboardMarkup()
     current_parsemod = None
     photo_data = None
+    poll_data = None
+    invoice_data = None
+    sticker_data = None
 
     #проверяем, задал ли бот вопрос пользователю, на который он обязательно должен ответить текстом в чате
     flg_need_response = queries_to_bd.check_need_response_flg(message.chat.id)
@@ -177,4 +180,4 @@ def main(bot, message):
     text_data = (current_result_text, current_reply_markup, current_parsemod, 0, 1)
 
     #отправляем все в единый метод отправки
-    sending.main(bot, message.chat.id, message.message_id, text_data = text_data, audio_data = audio_data, document_data = document_data, photo_data = photo_data)
+    sending.main(bot, message.chat.id, text_data, photo_data, poll_data, audio_data, invoice_data, sticker_data, document_data)

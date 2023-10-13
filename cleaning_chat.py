@@ -39,4 +39,5 @@ def main(bot, chat_id, msg_id = None):
                         queries_to_bd.set_msg_menu_as_inactive(msg)
 
                     except:
+                        queries_to_bd.set_msg_menu_as_inactive(msg)
                         queries_to_bd.save_error(str(traceback.format_exc()))

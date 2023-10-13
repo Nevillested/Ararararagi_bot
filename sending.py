@@ -1,10 +1,10 @@
 import queries_to_bd
 
 #это метод, через который мы будем отправлять все сообщения. Слишком много отправок разбросано по файлам, поэтому унифицируем это дело
-def main(bot, chat_id, msg_id, text_data = None, photo_data = None, poll_data = None, audio_data = None, invoice_data = None, sticker_data = None, document_data = None):
+def main(bot, chat_id, text_data = None, photo_data = None, poll_data = None, audio_data = None, invoice_data = None, sticker_data = None, document_data = None):
 
     #задаем по умолчанию
-    msg_id_outcome = msg_id
+    msg_id_outcome = queries_to_bd.get_last_msg_id()
 
     #отправка стикера
     if sticker_data != None:

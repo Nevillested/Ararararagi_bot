@@ -21,7 +21,6 @@ CONTENT_TYPES = ["text", "audio", "document", "photo", "sticker", "video", "vide
                  "group_chat_created", "supergroup_chat_created", "channel_chat_created", "migrate_to_chat_id",
                  "migrate_from_chat_id", "pinned_message"]
 
-#хэндер простых сообщений
 @MypyBot.message_handler(content_types=CONTENT_TYPES)
 def start_message(message):
 
@@ -43,7 +42,7 @@ def start_message(message):
         cleaning_chat.main(MypyBot, message.chat.id)
 
     #сохраняет входящее сообщение
-    queries_to_bd.save_simple_message(message)
+    queries_to_bd.save_data(message.chat.id, message.message_id, message.content_type, msg_txt = message.text)
 
     #уходим в кейсы всевозможных простых сообщений
     simple_message_cases.main(MypyBot, message)
@@ -58,7 +57,7 @@ def start_callback_query(call):
     cleaning_chat.main(MypyBot, call.message.chat.id, call.message.message_id)
 
     #сохраняем инфо о нажатой пользователем кнопке
-    queries_to_bd.save_callback_query(call)
+    queries_to_bd.save_data(call.message.chat.id, call.message.message_id, 'button', btn_id = call.data)
 
     #уходим в кейсы всевозможных кнопок
     callback_query_cases.case_main(call, MypyBot)
@@ -70,7 +69,7 @@ def start_edited_message(message):
     print(f"Пользователь {message.from_user.username} отредактировал сообщение.\n")
 
     #добавляет новую версию сообщения
-    queries_to_bd.insert_new_smiple_message_ver(message)
+    queries_to_bd.insert_new_msg_ver(message)
 
 #хэндер ивентов инлайн-запросов
 @MypyBot.inline_handler(lambda query: len(query.query) > 0)

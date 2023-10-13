@@ -34,7 +34,7 @@ def main(MypyBot):
                 text_data = (notification_text, None, None, 0, 0)
 
                 #отправляем
-                sending.main(MypyBot, notification_chat_id, queries_to_bd.get_last_msg_id(), text_data, None, None, None, None, None)
+                sending.main(MypyBot, notification_chat_id, text_data, None, None, None, None, None)
 
                 #обновляем дату следующей отправки напоминалки
                 queries_to_bd.update_notification_next_start(notification_id)
@@ -52,7 +52,7 @@ def main(MypyBot):
                 subscription_id = row[1]
 
                 #если это подписка с Шинобу - то она отправляется раз в час. в 00 минут
-                if str(subscription_id) == '1' and cur_date_time.minute == 0:
+                if str(subscription_id) == '1' and cur_date_time.minute == 5:
 
                     #подчищаем старые активные меню
                     cleaning_chat.main(MypyBot, subscription_chat_id)
@@ -64,7 +64,7 @@ def main(MypyBot):
                     photo_data = (url_of_result_image, True, 'Ежечасная рассылка лучшей девочки <3', None)
 
                     #отправляем
-                    sending.main(MypyBot, subscription_chat_id, queries_to_bd.get_last_msg_id(), None, photo_data, None, None, None, None)
+                    sending.main(MypyBot, subscription_chat_id, None, photo_data, None, None, None, None)
 
                 #если это подписка на международные праздники - то она отправляется в 22:00
                 elif cur_date_time.hour == 22 and cur_date_time.minute == 0 and str(subscription_id) == '2':
@@ -82,7 +82,7 @@ def main(MypyBot):
                         text_data = ('Сегодня ' + holiday_name.lower() + '\nС праздничком:)', None, None, 0, 0)
 
                         #и отправляем его
-                        sending.main(MypyBot, subscription_chat_id, queries_to_bd.get_last_msg_id(), text_data, None, None, None, None, None)
+                        sending.main(MypyBot, subscription_chat_id, text_data, None, None, None, None, None)
 
                 #если это подписка на комплименты - то она отправляется в 22:00
                 elif cur_date_time.hour == 22 and cur_date_time.minute == 0 and str(subscription_id) == '3':
@@ -94,5 +94,5 @@ def main(MypyBot):
                     text_data = (queries_to_bd.get_random_compliment(), None, None, 0, 0)
 
                     #и отправляем его
-                    sending.main(MypyBot, subscription_chat_id, queries_to_bd.get_last_msg_id(), text_data, None, None, None, None, None)
+                    sending.main(MypyBot, subscription_chat_id, text_data, None, None, None, None, None)
 

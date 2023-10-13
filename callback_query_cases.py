@@ -47,7 +47,7 @@ def case_main(call, bot):
         (text_data) = something(current_chat_id, current_btn_name)
 
     #отправляем все в единый метод отправки
-    sending.main(bot, call.message.chat.id, call.message.message_id, text_data, photo_data, poll_data, audio_data, invoice_data, sticker_data)
+    sending.main(bot, call.message.chat.id, text_data, photo_data, poll_data, audio_data, invoice_data, sticker_data, None)
 
 #ветка кнопок с Шинобу
 def shinobu(chat_id, btn_data):
