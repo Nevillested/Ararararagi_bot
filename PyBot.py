@@ -21,7 +21,7 @@ CONTENT_TYPES = ["text", "audio", "document", "photo", "sticker", "video", "vide
                  "group_chat_created", "supergroup_chat_created", "channel_chat_created", "migrate_to_chat_id",
                  "migrate_from_chat_id", "pinned_message"]
 
-#хэндер простых сообщений   
+#хэндер простых сообщений
 @MypyBot.message_handler(content_types=CONTENT_TYPES)
 def start_message(message):
 
@@ -47,7 +47,7 @@ def start_message(message):
 
     #уходим в кейсы всевозможных простых сообщений
     simple_message_cases.main(MypyBot, message)
-    
+
 #хэндлер нажатий на кнопки
 @MypyBot.callback_query_handler(func=lambda call: True)
 def start_callback_query(call):
@@ -75,12 +75,12 @@ def start_edited_message(message):
 #хэндер ивентов инлайн-запросов
 @MypyBot.inline_handler(lambda query: len(query.query) > 0)
 def start_inline(call):
-    
+
     print(f"{call.from_user.username} сделал inline зарос: {call.query}.\n")
-    
+
     #метод обработки всех инлайн запросов
     inline_query_cases.main(MypyBot, call)
-        
+
 #шедулер
 def scheduler_main():
     while True:
@@ -96,12 +96,12 @@ child_thread.start()
 def start_bot():
     while True:
 
-        try:            
+        try:
             print('Запуск бота')
             MypyBot.polling()
-            
+
         except:
-            
+
             print('Произошла ошибка, логируемся.')
             queries_to_bd.save_error(str(traceback.format_exc()))
             time.sleep(5)

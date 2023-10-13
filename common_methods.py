@@ -62,7 +62,7 @@ def get_shinobu_pic():
 ############################### отправляет рандомный стикер с Шинобу из имеющегося локально набора стикеров ###############################
 def get_shinobu_stick():
 
-    all_stickers_dir = "/home/duck/Documents/GitHub/arabot_dev/assets/stickers/"
+    all_stickers_dir = "/home/duck/Documents/GitHub/Ararararagi_bot/assets/stickers/"
 
     sticker_dir = all_stickers_dir + random.choice(os.listdir(all_stickers_dir))
 
@@ -71,7 +71,7 @@ def get_shinobu_stick():
 ############################### подготовка данных по музыке ###############################
 
 #не очень красиво, что дирректория прописана вручную, но поправлю позже через os get cwd. Попробуй подключиться, если сможешь:)
-music_path = "/home/duck/Documents/GitHub/arabot_dev/assets/music"
+music_path = "/home/duck/Documents/GitHub/Ararararagi_bot/assets/music"
 
 list_data_of_music_files = list()
 
@@ -105,7 +105,7 @@ def prepare_music_data():
     #item_three  3 элемент списка - название песни
     for path_of_file in list_of_full_path_all_files:
         #не очень красиво, что дирректория прописана вручную, но поправлю позже через os get cwd. Попробуй подключиться, если сможешь:)
-        unique_item = path_of_file.replace(r'/home/duck/Documents/GitHub/arabot_dev/assets/music/','')
+        unique_item = path_of_file.replace(r'/home/duck/Documents/GitHub/Ararararagi_bot/assets/music/','')
 
         item_zero  = (unique_item[0]).upper()
         item_one   = unique_item[0:find_nth(unique_item,r'/',1)]
@@ -114,7 +114,7 @@ def prepare_music_data():
         item_four  = path_of_file
         list_data_of_music_files.append([item_zero, item_one, item_two, item_three, item_four])
 
-    #раскомментировать, если появится новая музыка по директории '/home/duck/Documents/GitHub/arabot_dev/assets/music'
+    #раскомментировать, если появится новая музыка по директории '/home/duck/Documents/GitHub/Ararararagi_bot/assets/music'
     #queries_to_bd.gen_music_data(list_data_of_music_files)
 
 ############################### Метод шифрования и дешифрования ###############################
@@ -303,7 +303,7 @@ def current_weather(cur_data):
 #создает qr-код
 def create_qr_code(text, chat_id):
     qrcode = segno.make_qr(text)
-    new_dir = '/home/duck/Documents/GitHub/arabot_dev/assets/temp/qr_codes/'
+    new_dir = '/home/duck/Documents/GitHub/Ararararagi_bot/assets/temp/qr_codes/'
     os.chdir(new_dir)
     name = "qr_code_" + chat_id + ".pdf"
     qrcode.save(name, border=1, scale=8)
