@@ -16,10 +16,7 @@ common_methods.prepare_music_data()
 
 MypyBot = telebot.TeleBot(my_cfg.telegram_token)
 
-CONTENT_TYPES = ["text", "audio", "document", "photo", "sticker", "video", "video_note", "voice", "location", "contact",
-                 "new_chat_members", "left_chat_member", "new_chat_title", "new_chat_photo", "delete_chat_photo",
-                 "group_chat_created", "supergroup_chat_created", "channel_chat_created", "migrate_to_chat_id",
-                 "migrate_from_chat_id", "pinned_message"]
+CONTENT_TYPES = ["text", "audio", "document", "photo", "sticker", "video", "video_note", "voice", "location", "contact", "pinned_message"]
 
 @MypyBot.message_handler(content_types=CONTENT_TYPES)
 def start_message(message):

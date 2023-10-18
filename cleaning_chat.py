@@ -11,12 +11,10 @@ def main(bot, chat_id, msg_id = None):
     last_msg_id = None
     array_msg_id = []
 
-    if msg_id == None:
+    #получает msg_id последнего отправленного ему сообщения с меню
+    array_msg_id = queries_to_bd.get_menu_msg_id(chat_id)
 
-        #получает msg_id последнего отправленного ему сообщения с меню
-        array_msg_id = queries_to_bd.get_menu_msg_id(chat_id)
-
-    else:
+    if msg_id != None:
         array_msg_id.append(msg_id)
 
     #если есть какие-то активные меню, то...

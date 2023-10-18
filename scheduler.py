@@ -52,7 +52,7 @@ def main(MypyBot):
                 subscription_id = row[1]
 
                 #если это подписка с Шинобу - то она отправляется раз в час. в 00 минут
-                if str(subscription_id) == '1' and cur_date_time.minute == 5:
+                if str(subscription_id) == '1' and cur_date_time.minute == 0:
 
                     #подчищаем старые активные меню
                     cleaning_chat.main(MypyBot, subscription_chat_id)
