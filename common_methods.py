@@ -28,7 +28,7 @@ def get_url_pic_by_url(url):
         for image in soup.find_all("img"):
             image_links.append(image["src"])
         for cur_img_link in image_links:
-            if str(cur_img_link).__contains__('img10.joyreactor.cc/pics/post/'):
+            if str(cur_img_link).__contains__('joyreactor.cc/pics/post/'):
                 need_images.append("https:" + cur_img_link)
 
         if not need_images:  # Проверка, что список не пустой
@@ -330,7 +330,7 @@ def get_pic_by_teg(user_teg):
     text = url_encode_string(text)
 
     #создаем ссылку, где будем искать пикчу
-    url = "https://joyreactor.cc/search/" + text + "+/" +str(random.randint(1,10))
+    url = "https://joyreactor.cc/search/" + text
 
     photo_url = get_url_pic_by_url(url)
 
