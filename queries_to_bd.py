@@ -563,27 +563,9 @@ def get_status_of_notification(notification_id):
 #получает описание напоминалки по ее ID
 def get_notification_desc(notification_id):
     cur.execute("""
-    SELECT 'Название: ' || case when notif_name is not null then notif_name else '-' end || '\n' ||
-           'Год: ' || case when year_num is not null then CAST (year_num AS text) else '-' end || '\n' ||
-           'Месяц: ' || case when month_num is not null then CAST (month_num AS text) else '-' end || '\n' ||
-           'День: ' || case when day_num is not null then CAST (day_num AS text) else '-' end || '\n' ||
-           'Час: ' || case when hour_num is not null then CAST (hour_num AS text) else '-' end || '\n' ||
-           'Минута: ' || case when minute_num is not null then CAST (minute_num AS text) else '-' end || '\n' ||
-           'Повторять: ' || case when repeat_flg = 1 then 'да' else 'нет' end || '\n' ||
-           case when repeat_flg = 1 then
-             'Частота повторения: ' ||
-             case
-               when every_year_flg is not null then 'каждый год'
-               when every_month_flg is not null then 'каждый час'
-               when every_week_flg is not null then 'каждую неделю'
-               when every_day_flg is not null then 'каждый день'
-               when every_hour_flg is not null then 'каждый час'
-               when every_minute_flg is not null then 'каждую минуту'
-             end
-           else ''
-           end
-      FROM arabot.notifications
-     WHERE id = """ + notification_id + """
+    SELECT NOTIF_DESC
+    FROM arabot.v_notifications
+    WHERE id = """ + notification_id + """
     """)
     result_tuple = cur.fetchone()
     result_str = str(result_tuple[0])
@@ -674,10 +656,9 @@ def get_notifications_data():
     SELECT id,
            notif_name,
            chat_id
-      FROM arabot.notifications
-     WHERE 1 = 1
+      FROM arabot.v_notifications
+     WHERE date_trunc('Minute', CURRENT_TIMESTAMP) = date_trunc('Minute', dt_next_run)
        AND activity_flg = 1
-       AND TO_TIMESTAMP( year_num || '-' || month_num || '-' || day_num || ' ' || hour_num || ':'  || minute_num || ':00', 'YYYY-MM-DD HH24:MI:SS') = date_trunc('Minute', CURRENT_TIMESTAMP)
     """)
     rows = cur.fetchall()
     return rows
@@ -693,8 +674,8 @@ def get_subscriptions_data():
     return rows
 
 #обновляет следующее время старта напоминалки
-def update_notification_next_start(notification_id):
-    cur.execute("CALL arabot.update_notification_next_start(" + str(notification_id) + ");")
+def update_notification_next_start():
+    cur.execute("CALL arabot.update_notification_next_start();")
 
 #получает рандомный анекдот
 def get_random_joke():

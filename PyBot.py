@@ -80,8 +80,15 @@ def start_inline(call):
 #шедулер
 def scheduler_main():
     while True:
-        scheduler.main(MypyBot)
-        time.sleep(60)
+        try:
+            scheduler.main(MypyBot)
+            time.sleep(60)
+
+        except:
+
+            print('Произошла ошибка, логируемся.')
+            queries_to_bd.save_error(str(traceback.format_exc()))
+            time.sleep(5)
 
 #запускаем шедулер
 child_thread = threading.Thread(target=scheduler_main)
