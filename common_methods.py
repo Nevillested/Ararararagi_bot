@@ -176,9 +176,9 @@ def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):
 
 ############################### Метод отправки квизов ###############################
 #это можно было сделать намного лучше, но у меня руки из жопы обращаться со списками, массивами и кортежами
-def get_kanji_quiz(chat_id, decade_number):
+def get_kanji_quiz(chat_id, decade_number, decade_number_start = None, decade_number_end = None):
 
-    tuple_of_kanji = queries_to_bd.get_list_of_kanji(decade_number)
+    tuple_of_kanji = queries_to_bd.get_list_of_kanji(decade_number, decade_number_start, decade_number_end)
 
     array_of_kanji_id = []
 

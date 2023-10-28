@@ -579,19 +579,26 @@ def delete_notification(notification_id):
     """)
 
 # возаращет список десятков всех кандзи. Ну то есть в базе находится 157 кандзи например. Вот запрос получает список из чисел от 1 до 16 выдает его
-def get_list_of_decade_number():
-    cur.execute("""
+def get_list_of_decade_number(decade_number_start = None):
+    cursor = """
     SELECT distinct decade_number
-      FROM arabot.jap_kanji;
-    """)
+      FROM arabot.jap_kanji
+    """
+    if decade_number_start != None:
+        cursor += ' where decade_number >= ' + str(decade_number_start)
+    cur.execute(cursor)
     rows = cur.fetchall()
     return rows
 
 # получает 4 рандомных кандзи из таблицы (по номеру десятка, если он указан)
-def get_list_of_kanji(decade_number = None):
+def get_list_of_kanji(decade_number = None, decade_number_start = None, decade_number_end = None):
     additional_filter = ''
     if decade_number != None:
         additional_filter = ' and decade_number = ' + str(decade_number)
+
+    if decade_number_start != None and decade_number_end != None:
+        additional_filter = ' and decade_number >= ' + str(decade_number_start) + ' and decade_number <= ' + str(decade_number_end)
+
     cur.execute("""
     select id, kanji, reading, rus_word
       from arabot.jap_kanji

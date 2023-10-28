@@ -419,7 +419,41 @@ def japanese_main():
 def japanese_kanji_quiz_main():
     text = 'Какие кандзи?'
     cnt_object_in_row = 2
-    dict_of_buttons = {"Кандзи по номеру десятка" : "6/1/1", "Все имеющиеся кандзи" : "6/1/2", "Назад" : "6/back/1"}
+    dict_of_buttons = {"Кандзи по номеру десятка" : "6/1/1", "Все имеющиеся кандзи" : "6/1/2", "С i десятка по j десяток" : "6/1/3", "Назад" : "6/back/1"}
+    reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
+
+#клавиатура предлагает выборать с какого номер десятка будет поиск кандзи для квиза
+def poll_knji_i_j_decade_start():
+    text = 'С какого десятка?'
+    cnt_object_in_row = 5
+    dict_of_buttons = {}
+    list_of_decade_number = queries_to_bd.get_list_of_decade_number()
+    for item in list_of_decade_number:
+        dict_of_buttons[item[0]] = '6/1/3/1/' + str(item[0])
+    sorted_dict_of_buttons = dict(sorted(dict_of_buttons.items(), key=lambda item: item[0]))
+    sorted_dict_of_buttons["Назад"] = "6/back/2"
+    reply_to = create_inline_kb(sorted_dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
+
+#клавиатура предлагает выборать по какой номер десятка будет поиск кандзи для квиза
+def poll_knji_i_j_decade_end(decade_number_start):
+    text = 'По какой десяток?'
+    cnt_object_in_row = 5
+    dict_of_buttons = {}
+    list_of_decade_number = queries_to_bd.get_list_of_decade_number(decade_number_start)
+    for item in list_of_decade_number:
+        dict_of_buttons[item[0]] = '6/1/3/2/' + str(decade_number_start) + '/' + str(item[0])
+    sorted_dict_of_buttons = dict(sorted(dict_of_buttons.items(), key=lambda item: item[0]))
+    sorted_dict_of_buttons["Назад"] = "6/1/3"
+    reply_to = create_inline_kb(sorted_dict_of_buttons, cnt_object_in_row)
+    return text, reply_to
+
+#выдает конечное меню по ветке с получением квиза для кандзи с определенного десятка по определенный десяток
+def last_menu_kanji_quiz_from_decade_to_decade(decade_number_start, decade_number_end):
+    text = 'Квиз отправлен'
+    cnt_object_in_row = 1
+    dict_of_buttons = {"Еще!": "6/1/4/" + str(decade_number_start) + "/" + str(decade_number_end), "Назад" : "6/1/3"}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 

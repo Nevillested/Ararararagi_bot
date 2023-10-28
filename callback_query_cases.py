@@ -344,6 +344,26 @@ def japanese(chat_id, btn_data):
     elif btn_data == '6/1/2':
         (text, reply_markup) = keyboards.last_japanese_menu_by_full_kani()
         poll_data = common_methods.get_kanji_quiz(chat_id, None)
+    #Квиз с i десятка по j десяток - start
+    elif btn_data == '6/1/3':
+        (text, reply_markup) = keyboards.poll_knji_i_j_decade_start()
+    #Квиз с i десятка по j десяток  - end
+    elif btn_data.startswith('6/1/3/1/'):
+        decade_number = (btn_data.split('/'))[-1]
+        (text, reply_markup) = keyboards.poll_knji_i_j_decade_end(decade_number)
+    #Квиз с i десятка по j десяток  - result
+    elif btn_data.startswith('6/1/3/2/'):
+        decade_number_end = (btn_data.split('/'))[-1]
+        decade_number_start = (btn_data.split('/'))[-2]
+        (text, reply_markup) = keyboards.last_menu_kanji_quiz_from_decade_to_decade(decade_number_start, decade_number_end)
+        poll_data = common_methods.get_kanji_quiz(chat_id, None, decade_number_start, decade_number_end)
+    #кнпока "еще" - квиз с i десятка по j десяток
+    elif btn_data.startswith('6/1/4/'):
+        decade_number_end = (btn_data.split('/'))[-1]
+        decade_number_start = (btn_data.split('/'))[-2]
+        (text, reply_markup) = keyboards.last_menu_kanji_quiz_from_decade_to_decade(decade_number_start, decade_number_end)
+        text = queries_to_bd.get_last_bot_text_menu(chat_id)
+        poll_data = common_methods.get_kanji_quiz(chat_id, None, decade_number_start, decade_number_end)
     #кнпока "еще" - квиз со всеми имеющимися кандзи
     elif btn_data == '6/1/2/1':
         (text, reply_markup) = keyboards.last_japanese_menu_by_full_kani()
