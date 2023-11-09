@@ -712,7 +712,7 @@ def get_random_compliment():
 def get_current_holiday():
     cur.execute("""
     SELECT text_holiday
-      FROM public.international_holiday
+      FROM arabot.international_holiday
      WHERE DATE_TRUNC('day', date_holiday) = DATE_TRUNC('day', now())
     """)
     result_tuple = cur.fetchone()
