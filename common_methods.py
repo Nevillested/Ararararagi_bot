@@ -174,44 +174,6 @@ def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):
 
     return text_out
 
-############################### Метод отправки квизов ###############################
-#это можно было сделать намного лучше, но у меня руки из жопы обращаться со списками, массивами и кортежами
-def get_kanji_quiz(chat_id, decade_number, decade_number_start = None, decade_number_end = None):
-
-    tuple_of_kanji = queries_to_bd.get_list_of_kanji(decade_number, decade_number_start, decade_number_end)
-
-    array_of_kanji_id = []
-
-    poll_options_out = []
-
-    array_of_kanji = []
-
-    for item in tuple_of_kanji:
-
-        #наполняем массив с вариантами ответов
-        poll_options_out.append(item[3] + ' (Чтения: ' + item[2] + ')')
-
-        #наполняем массив с ID кандзи
-        array_of_kanji_id.append(item[0])
-
-        #наполяем массив с иероглифами кандзи
-        array_of_kanji.append(item[1])
-
-    #выбираем рандомом ID кандзи, по которому будем спрашивать
-    selected_value = random.choice(array_of_kanji_id)
-
-    #ищем индекс правильного ответа в массивев массиве
-    correct_option_id_out = array_of_kanji_id.index(selected_value)
-
-    #ищем иероглиф кандзи, по которому задаем вопрос
-    question_kaji = array_of_kanji[correct_option_id_out]
-
-    text = 'Что это за кандзи ' + question_kaji + ' ?'
-
-    poll_data = (text, poll_options_out, correct_option_id_out)
-
-    return poll_data
-
 ############################### Методы преобразования текста в речь и наоборот ###############################
 
 #преобразует текст в речь

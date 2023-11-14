@@ -59,46 +59,6 @@ def main(bot, message):
 
                 current_parsemod = 'MarkdownV2'
 
-            #если последняя нажатая кнопка относится к меню с ID = 6, то это изучение японского. В японском может быть только 2 варианта ввода текста - это поиск слова в моем личном словаре и с в словаре warudai
-            elif what_is_current_context.startswith("6"):
-
-                #поиск по моему словарю
-                if what_is_current_context.startswith("6/2/"):
-
-                    kanji_search = None
-                    kana_search = None
-                    rus_search = None
-
-                    #получаем id типа поиска. 1 = по кадзи, 2 = по кане, 3 = по русскому переводу
-                    search_id = (what_is_current_context.split('/'))[-1]
-
-                    if search_id == '1':
-                        kanji_search = message.text
-                    elif search_id == '2':
-                        kana_search = message.text
-                    elif search_id == '3':
-                        rus_search = message.text
-
-                    #отправляем на поиск перевода
-                    (current_result_text, current_reply_markup) = keyboards.japanese_my_dict_translate(kanji_search, kana_search, rus_search)
-
-                #поиск по словарю warodai
-                elif what_is_current_context.startswith("6/3/"):
-
-                    jap_text = None
-                    rus_text = None
-
-                    #получаем id типа поиска. 1 = по японской писанине, 3 = по русской писанине
-                    search_id = (what_is_current_context.split('/'))[-1]
-
-                    if search_id == '1':
-                        jap_text = message.text
-                    elif search_id == '2':
-                        rus_text = message.text
-
-                    #отправляем на поиск перевода
-                    (current_result_text, current_reply_markup) = keyboards.japanese_warodai_dict_translate(jap_text, rus_text)
-
             #текстовые данные ожидаются от пользователя по ветке 8 только в случае преобразования текста в войс
             elif what_is_current_context in ["8/1/1", "8/2/1"]:
 

@@ -99,15 +99,15 @@ child_thread.start()
 def start_bot():
     while True:
 
-        try:
+        #try:
             print('Запуск бота')
             MypyBot.polling()
 
-        except:
+        #except:
 
-            print('Произошла ошибка, логируемся.')
-            queries_to_bd.save_error(str(traceback.format_exc()))
-            time.sleep(5)
+            #print('Произошла ошибка, логируемся.')
+            #queries_to_bd.save_error(str(traceback.format_exc()))
+            #time.sleep(5)
 
 #запускаем бота
 start_bot()

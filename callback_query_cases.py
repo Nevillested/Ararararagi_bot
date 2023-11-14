@@ -35,7 +35,7 @@ def case_main(call, bot):
         (text_data) = crypting(current_chat_id, current_btn_name)
 
     elif current_btn_name.startswith('6'):
-        (text_data, poll_data) = japanese(current_chat_id, current_btn_name)
+        (text_data) = japanese(current_chat_id, current_btn_name)
 
     elif current_btn_name.startswith('7'):
         (text_data, invoice_data) = donat(current_chat_id, current_btn_name)
@@ -311,88 +311,13 @@ def japanese(chat_id, btn_data):
     reply_markup = types.InlineKeyboardMarkup()
     text = None
     text_data = None
-    poll_data = None
-    flg_need_response = 0
-
-    #кнопка, возвращающая основное меню по изучению Японского
-    if btn_data == '6':
-        (text, reply_markup) = keyboards.japanese_main()
-    #кнопка возвращающая в главное меню
-    elif btn_data == '6/back/0':
+    if btn_data == "6":
+        (text, reply_markup) = keyboards.jap_main()
+    else:
         (text, reply_markup) = keyboards.main_menu(chat_id)
-    #кнопка возвращающая в основное меню по изучению Японского
-    elif btn_data == '6/back/1':
-        (text, reply_markup) = keyboards.japanese_main()
-    #кнопка, возвращающая на выбор меню с квизами по кандзи - по номеру урока или все кандзи
-    elif btn_data == '6/back/2':
-        (text, reply_markup) = keyboards.japanese_kanji_quiz_main()
-    #кнопка, возвращающая на выбор номера десятка кандзи
-    elif btn_data == '6/back/3':
-        (text, reply_markup) = keyboards.japanese_kanji_quiz_certain()
-    #меню с квизами по кандзи
-    elif btn_data == '6/1':
-        (text, reply_markup) = keyboards.japanese_kanji_quiz_main()
-    #меню с квизами по кандзи по номеру десятка
-    elif btn_data == '6/1/1':
-        (text, reply_markup) = keyboards.japanese_kanji_quiz_certain()
-    #кнпока, по нажатии после которой бот выдает квиз и спрашивает, нужно ли еще
-    elif btn_data.startswith('6/1/1/'):
-        decade_number = (btn_data.split('/'))[-1]
-        (text, reply_markup) = keyboards.last_japanese_menu_by_certain_kani(decade_number)
-        poll_data = common_methods.get_kanji_quiz(chat_id, decade_number)
-    #Квиз со всеми имеющимися кандзи
-    elif btn_data == '6/1/2':
-        (text, reply_markup) = keyboards.last_japanese_menu_by_full_kani()
-        poll_data = common_methods.get_kanji_quiz(chat_id, None)
-    #Квиз с i десятка по j десяток - start
-    elif btn_data == '6/1/3':
-        (text, reply_markup) = keyboards.poll_knji_i_j_decade_start()
-    #Квиз с i десятка по j десяток  - end
-    elif btn_data.startswith('6/1/3/1/'):
-        decade_number = (btn_data.split('/'))[-1]
-        (text, reply_markup) = keyboards.poll_knji_i_j_decade_end(decade_number)
-    #Квиз с i десятка по j десяток  - result
-    elif btn_data.startswith('6/1/3/2/'):
-        decade_number_end = (btn_data.split('/'))[-1]
-        decade_number_start = (btn_data.split('/'))[-2]
-        (text, reply_markup) = keyboards.last_menu_kanji_quiz_from_decade_to_decade(decade_number_start, decade_number_end)
-        poll_data = common_methods.get_kanji_quiz(chat_id, None, decade_number_start, decade_number_end)
-    #кнпока "еще" - квиз с i десятка по j десяток
-    elif btn_data.startswith('6/1/4/'):
-        decade_number_end = (btn_data.split('/'))[-1]
-        decade_number_start = (btn_data.split('/'))[-2]
-        (text, reply_markup) = keyboards.last_menu_kanji_quiz_from_decade_to_decade(decade_number_start, decade_number_end)
-        text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        poll_data = common_methods.get_kanji_quiz(chat_id, None, decade_number_start, decade_number_end)
-    #кнпока "еще" - квиз со всеми имеющимися кандзи
-    elif btn_data == '6/1/2/1':
-        (text, reply_markup) = keyboards.last_japanese_menu_by_full_kani()
-        text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        poll_data = common_methods.get_kanji_quiz(chat_id, None)
-    #кнопка "еще" после получения квиза с кандзи по номеру определенного десятка
-    elif btn_data.startswith('6/1/3/'):
-        decade_number = (btn_data.split('/'))[-1]
-        (text, reply_markup) = keyboards.last_japanese_menu_by_certain_kani(decade_number)
-        text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        poll_data = common_methods.get_kanji_quiz(chat_id, decade_number)
-    #меню с словарем пройденных слов
-    elif btn_data == '6/2':
-        (text, reply_markup) = keyboards.japanese_my_dict()
-    #Ищем в нашем словаре слова
-    elif btn_data == '6/2/1' or btn_data == '6/2/2' or btn_data == '6/2/3':
-        flg_need_response = 1
-        (text, reply_markup) = keyboards.japanese_search_in_my_dict()
-    #меню с словарем warodai
-    elif btn_data == '6/3':
-        (text, reply_markup) = keyboards.japanese_warodai_dict()
-    #Ищем словаре warodai слова
-    elif btn_data == '6/3/1' or btn_data == '6/3/2':
-        flg_need_response = 1
-        (text, reply_markup) = keyboards.japanese_search_in_warodai_dict()
 
-    text_data = (text, reply_markup, None, flg_need_response, 1)
-
-    return text_data, poll_data
+    text_data = (text, reply_markup, None, 0, 1)
+    return text_data
 
 #ветка кнопок с донатом
 def donat(chat_id, btn_data):
