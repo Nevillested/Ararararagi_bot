@@ -76,14 +76,16 @@ def update_user(data_from_message):
               last_name,
               language_code,
               is_premium,
-              is_bot)
+              is_bot,
+              dt_created)
       VALUES (s.chat_id,
               s.username,
               s.first_name,
               s.last_name,
               s.language_code,
               s.is_premium,
-              s.is_bot)
+              s.is_bot,
+              current_timestamp)
     WHEN MATCHED THEN
       UPDATE SET username      = s.username,
                  first_name    = s.first_name,
