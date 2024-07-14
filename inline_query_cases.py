@@ -45,25 +45,25 @@ def main(bot, query):
 
         tags = (query_text.lower())[4:]
 
-        if len(tags) > 0:
+        if len(query.offset) == 0:
+            offset = 0
 
-            if len(query.offset) == 0:
-                offset = 0
+        offset += 1
 
-            offset += 1
+        url_string = "https://danbooru.donmai.us/posts.json?" + my_cfg.danboru_api_key + "&tags=" + tags + "&page=" + str(offset)
 
-            url_string = "https://danbooru.donmai.us/posts.json?" + my_cfg.danboru_api_key + "&tags=" + tags + "&page=" + str(offset)
-            response = requests.get(url_string)
-            response_list = response.json()
+        response = requests.get(url_string)
 
-            for item in response_list:
-                if 'variants' in item['media_asset']:
-                    cnt += 1
-                    result = types.InlineQueryResultPhoto(
-                        id = str(cnt),
-                        photo_url = (((item['media_asset'])['variants'])[-1])['url'],
-                        thumbnail_url = (((item['media_asset'])['variants'])[0])['url']
-                    )
-                    results.append(result)
+        response_list = response.json()
+
+        for item in response_list:
+            if 'variants' in item['media_asset']:
+                cnt += 1
+                result = types.InlineQueryResultPhoto(
+                    id = str(cnt),
+                    photo_url = (((item['media_asset'])['variants'])[-1])['url'],
+                    thumbnail_url = (((item['media_asset'])['variants'])[0])['url']
+                )
+                results.append(result)
 
     bot.answer_inline_query(query.id, results, cache_time = 0, next_offset = offset)
