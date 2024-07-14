@@ -2,6 +2,7 @@ from telebot import types
 import common_methods
 import requests
 import urllib.parse
+import my_cfg
 
 def main(bot, query):
 
@@ -9,9 +10,17 @@ def main(bot, query):
 
     query_text = query.query
 
+    cnt = 0
+
+    offset = None
+
+    if len(query.offset) == 0:
+        offset = 1
+    else:
+        offset = int(query.offset)
+
     #для избранных, кто знает ключевое слово. (меня попросили оставить.)
     if query_text.find("fuck") >= 0:
-        cnt = 0
         #меня очень просили это сделать, проше прощения
         dict = {"Способ похождения №1" : "ой, иди нахуй", "Способ похождения №2" : "ой, иди в пизду", "Способ похождения №3" : "ой, иди в очко", "Способ похождения №4" : "Ваш звонок очень важен для нас, оставайтесь на линии"}
 
@@ -31,16 +40,27 @@ def main(bot, query):
             )
             results.append(result)
 
-    else:
+    elif query_text.find("pic") >= 0:
 
-        current_text = query_text.lower()
+        tags = (query_text.lower())[4:]
 
-        result = types.InlineQueryResultArticle(
-            id = 1,
-            title = current_text,
-            input_message_content = types.InputTextMessageContent(current_text),
-            description = current_text
-        )
-        results.append(result)
+        if len(tags) > 0:
 
-    bot.answer_inline_query(query.id, results, cache_time = 0)
+            url_string = "https://danbooru.donmai.us/posts.json?" + my_cfg.danboru_api_key + "&tags=" + tags + "&page=" + str(offset)
+            response = requests.get(url_string)
+            response_list = response.json()
+
+            for item in response_list:
+                if 'variants' in item['media_asset']:
+                    cnt += 1
+                    result = types.InlineQueryResultPhoto(
+                        id = str(cnt),
+                        photo_url = (((item['media_asset'])['variants'])[-1])['url'],
+                        thumbnail_url = (((item['media_asset'])['variants'])[0])['url']
+                    )
+                    results.append(result)
+
+
+            offset += 1
+
+    bot.answer_inline_query(query.id, results, cache_time = 0, next_offset = str(offset))
