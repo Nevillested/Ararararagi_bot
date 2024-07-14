@@ -14,9 +14,7 @@ def main(bot, query):
 
     offset = None
 
-    if len(query.offset) == 0:
-        offset = 1
-    else:
+    if len(query.offset) != 0 and str(query.offset) != 'None':
         offset = int(query.offset)
 
     #для избранных, кто знает ключевое слово. (меня попросили оставить.)
@@ -46,6 +44,11 @@ def main(bot, query):
 
         if len(tags) > 0:
 
+            if len(query.offset) == 0:
+                offset = 0
+
+            offset += 1
+
             url_string = "https://danbooru.donmai.us/posts.json?" + my_cfg.danboru_api_key + "&tags=" + tags + "&page=" + str(offset)
             response = requests.get(url_string)
             response_list = response.json()
@@ -60,7 +63,4 @@ def main(bot, query):
                     )
                     results.append(result)
 
-
-            offset += 1
-
-    bot.answer_inline_query(query.id, results, cache_time = 0, next_offset = str(offset))
+    bot.answer_inline_query(query.id, results, cache_time = 0, next_offset = offset)
