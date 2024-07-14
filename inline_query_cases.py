@@ -18,9 +18,12 @@ def main(bot, query):
         offset = int(query.offset)
 
     #для избранных, кто знает ключевое слово. (меня попросили оставить.)
-    if query_text.find("fuck") >= 0:
-        #меня очень просили это сделать, проше прощения
+    if query_text.startswith("fuck") >= 0:
+        #меня очень просили это сделать, прошу прощения
         dict = {"Способ похождения №1" : "ой, иди нахуй", "Способ похождения №2" : "ой, иди в пизду", "Способ похождения №3" : "ой, иди в очко", "Способ похождения №4" : "Ваш звонок очень важен для нас, оставайтесь на линии"}
+
+        if len(query_text[4:]) != 0:
+            dict["Уникальный способ похождения"] = query_text[4:]
 
         for key, value in dict.items():
             cnt += 1
@@ -38,7 +41,7 @@ def main(bot, query):
             )
             results.append(result)
 
-    elif query_text.find("pic") >= 0:
+    elif query_text.startswith("pic ") >= 0:
 
         tags = (query_text.lower())[4:]
 
