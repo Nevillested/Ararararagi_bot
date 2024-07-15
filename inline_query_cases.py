@@ -3,6 +3,8 @@ import common_methods
 import requests
 import urllib.parse
 import my_cfg
+import transliterate
+import itertools
 
 def main(bot, query):
 
@@ -43,27 +45,24 @@ def main(bot, query):
 
     elif query_text.find("pic") >= 0:
 
-        tags = (query_text.lower())[4:]
-
         if len(query.offset) == 0:
             offset = 0
 
         offset += 1
 
-        url_string = "https://danbooru.donmai.us/posts.json?" + my_cfg.danboru_api_key + "&tags=" + tags + "&page=" + str(offset)
+        tags = (query_text.lower())[4:]
 
-        response = requests.get(url_string)
+        tags = (common_methods.transliterating(tags)).replace(' ', '_')
 
-        response_list = response.json()
+        array_tags = tags.split("_")
 
-        for item in response_list:
-            if 'variants' in item['media_asset']:
-                cnt += 1
-                result = types.InlineQueryResultPhoto(
-                    id = str(cnt),
-                    photo_url = (((item['media_asset'])['variants'])[-1])['url'],
-                    thumbnail_url = (((item['media_asset'])['variants'])[0])['url']
-                )
-                results.append(result)
+        for result_tag in itertools.permutations(array_tags):
+
+            new_tag = '_'.join(result_tag)
+
+            results = common_methods.get_url_data_pic(is_single_pic = 0, tag = new_tag, page = offset)
+
+            if len(results) != 0:
+                break
 
     bot.answer_inline_query(query.id, results, cache_time = 0, next_offset = offset)

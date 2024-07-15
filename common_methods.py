@@ -1,63 +1,62 @@
-import requests
-from bs4 import BeautifulSoup
-import random
-import urllib
-import os
-import queries_to_bd
-import random
-from PIL import Image
-from io import BytesIO
-from gtts import gTTS
-import subprocess
-import speech_recognition as sr
 from geopandas.tools import geocode
-import json
+import speech_recognition as sr
+from telebot import types
+from gtts import gTTS
+import queries_to_bd
+import subprocess
+import keyboards
+import requests
 import my_cfg
+import random
 import segno
-import transliterate
+import json
+import os
 
-############################### отправляет рандомную пикчу с Шинобу с реактора ###############################
-#выдает рандомное изображение по прилетевшей на вход ссылке
-def get_url_pic_by_url(url):
-    photo_url = None
-    while True:
-        response = requests.get(url)
-        soup = BeautifulSoup(response.content, "html.parser")
-        image_links = []
-        need_images = []
-        for image in soup.find_all("img"):
-            image_links.append(image["src"])
-        for cur_img_link in image_links:
-            if str(cur_img_link).__contains__('joyreactor.cc/pics/post/'):
-                need_images.append("https:" + cur_img_link)
+############################### выдает массив или одиночну ссылку на пикчу по заданному тегу с данбору ###############################
+def get_url_data_pic(is_single_pic, tag, page):
 
-        if not need_images:  # Проверка, что список не пустой
-            continue  # Переходим к следующей итерации цикла
+    array_of_InlineQueryResultPhoto = []
+    array_of_string_url = []
+    url_string = "https://danbooru.donmai.us/posts.json?" + my_cfg.danboru_api_key + "&tags=" + tag + "&page=" + str(page)
+    response = requests.get(url_string)
+    response_list = response.json()
+    cnt = 0
 
-        photo_url = random.choice(need_images)
-        response = requests.head(photo_url)
-        if "Content-Length" in response.headers:
-            image_size = int(response.headers["Content-Length"])
-        else:
-            response = requests.get(photo_url)  # Исправлено image_url на photo_url
-            if response.status_code == 200:
-                image_size = len(response.content)
+    if len(response_list) != 0:
+        for item in response_list:
+            if 'variants' in item['media_asset']:
+                if tag != 'oshino_shinobu' and (item['rating']).lower() == 'e': #https://danbooru.donmai.us/wiki_pages/howto:rate
 
-        if image_size < 20000000:
-            break
+                    cnt += 1
+                    result = types.InlineQueryResultPhoto(
+                        id = str(cnt),
+                        photo_url = (((item['media_asset'])['variants'])[-1])['url'],
+                        thumbnail_url = (((item['media_asset'])['variants'])[0])['url'],
+                        caption = '<span class="tg-spoiler">' + item['tag_string_character'] + '</span>',
+                        parse_mode='html'
+                    )
+                    array_of_InlineQueryResultPhoto.append(result)
+                    array_of_string_url.append((((item['media_asset'])['variants'])[-1])['url'])
 
-    return photo_url
+                else:
 
+                    cnt += 1
+                    result = types.InlineQueryResultPhoto(
+                        id = str(cnt),
+                        photo_url = (((item['media_asset'])['variants'])[-1])['url'],
+                        thumbnail_url = (((item['media_asset'])['variants'])[0])['url'],
+                        caption = '<span class="tg-spoiler">' + item['tag_string_character'] + '</span>',
+                        parse_mode='html'
+                    )
+                    array_of_InlineQueryResultPhoto.append(result)
+                    array_of_string_url.append((((item['media_asset'])['variants'])[-1])['url'])
 
-#получает рандомную ссылку с пикчей Шинобу
-def get_shinobu_pic():
-    #создаем ссылку
-    url = "https://joyreactor.cc/search/+/" + str(random.randint(1,50)) + "?tags=Oshino+Shinobu%2C+"
+    if is_single_pic == 0:
+        return array_of_InlineQueryResultPhoto
+    else:
+        return random.choice(array_of_string_url)
 
-    #получает адрес пикчи
-    url_of_result_image = get_url_pic_by_url(url)
-
-    return url_of_result_image
+#title=None, description=None, caption=None, reply_markup=None, input_message_content=None, parse_mode=None, caption_entities=None, show_caption_above_media=None
 
 ############################### отправляет рандомный стикер с Шинобу из имеющегося локально набора стикеров ###############################
 def get_shinobu_stick():
@@ -281,25 +280,13 @@ def url_encode_string(input_string):
 
     return input_string
 
-#выдает photo_data пикчи
-def get_pic_by_teg(user_teg):
-
-    #для начала транслитируем текст. Неважно, русский он или английский. Если английский - ничего не изменится.
-    text = transliterate.translit(user_teg, "ru", reversed=True)
-
-    #затем заменим все спец символы
-    text = url_encode_string(text)
-
-    #создаем ссылку, где будем искать пикчу
-    url = "https://joyreactor.cc/search/" + text
-
-    photo_url = get_url_pic_by_url(url)
-
-    photo_caption = '<a href="'+photo_url+'">Ссылка на страницу с постом пикчи</a>'
-
-    photo_spoiler = True
-
-    photo_parsemod = 'HTML'
-
-    return photo_url, photo_spoiler, photo_caption, photo_parsemod
-
+#свой метод транслитерации русских слов
+def transliterating(word):
+    dic = {'ь':'', 'ъ':'', 'а':'a', 'б':'b','в':'v', 'г':'g', 'д':'d', 'е':'e', 'ё':'yo','ж':'zh', 'з':'z', 'и':'i', 'й':'y', 'к':'k', 'л':'l', 'м':'m', 'н':'n', 'о':'o', 'п':'p', 'р':'r',  'с':'s', 'т':'t', 'у':'u', 'ф':'f', 'х':'h', 'ц':'ts', 'ч':'ch', 'ш':'sh', 'щ':'sch', 'ы':'yi', 'э':'e', 'ю':'yu', 'я':'ya'}
+    result = ''
+    for char in word:
+        if char in (dic.keys()):
+            result += dic[char]
+        else:
+            result += char
+    return result

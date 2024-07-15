@@ -4,6 +4,7 @@ import queries_to_bd
 import datetime
 import sending
 import cleaning_chat
+import random
 
 def main(MypyBot):
 
@@ -56,7 +57,7 @@ def main(MypyBot):
                 cleaning_chat.main(MypyBot, subscription_chat_id)
 
                 #получаем рандомный url пикчи с Шинобу
-                url_of_result_image = common_methods.get_shinobu_pic()
+                url_of_result_image = common_methods.get_url_data_pic(is_single_pic = 1, tag = 'oshino_shinobu', page = random.randint(1, 200))
 
                 #создаем список данных для иозбражения
                 photo_data = (url_of_result_image, True, 'Ежечасная рассылка лучшей девочки <3', None)

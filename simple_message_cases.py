@@ -85,15 +85,6 @@ def main(bot, message):
 
                 document_data = common_methods.create_qr_code(message.text, str(message.chat.id))
 
-            #текстовые данные ожидаются от пользователя по ветке 9/4 только в случае получения от пользователя тегов, по которым будем искать пикчу на реакторе
-            elif what_is_current_context == "9/4":
-
-                #получает последнее меню по ветке получения пикчи по тегу
-                (current_result_text, current_reply_markup) = keyboards.get_pic_by_teg_result()
-
-                #получает адрес изображения, спойлер и подпись к нему
-                photo_data = common_methods.get_pic_by_teg(message.text)
-
             #если тип контента не подходит ни к одному из вариантов, которые ждет бот - сообщаем юзеру об этом
             else:
                 current_result_text = 'Ты прислал не тот тип контента который нужен. Поздравляю тебя, начинай заново\n/menu'

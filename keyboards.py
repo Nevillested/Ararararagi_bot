@@ -503,7 +503,7 @@ def text_speech_result_voice(input_user_text, lang_code):
 def something_main():
     text = 'Полезности'
     cnt_object_in_row = 2
-    dict_of_buttons = {"Анекдоты" : "9/1", "Погода" : "9/2", "QR-код" : "9/3", "Пикча по тегу" : "9/4", "Рандомное решение (да/нет)" : "9/5", "Назад" : "9/back/0"}
+    dict_of_buttons = {"Анекдоты" : "9/1", "Погода" : "9/2", "QR-код" : "9/3", "Рандомное решение (да/нет)" : "9/4", "Назад" : "9/back/0"}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return text, reply_to
 

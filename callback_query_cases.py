@@ -470,13 +470,8 @@ def something(chat_id, btn_data):
         (text, reply_markup) = keyboards.qr_code()
         flg_need_response = 1
 
-    #выдает пикчу по тегу
-    elif btn_data == "9/4":
-        (text, reply_markup) = keyboards.get_pic_by_teg_main()
-        flg_need_response = 1
-
     #выдает рандомное решение
-    elif btn_data in ["9/5", "9/5/1"]:
+    elif btn_data in ["9/4", "9/4/1"]:
         (text, reply_markup) = keyboards.get_random(btn_data, chat_id)
 
     text_data = (text, reply_markup, parsemod, flg_need_response, 1)
