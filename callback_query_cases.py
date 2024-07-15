@@ -6,6 +6,7 @@ import os
 from telebot.types import LabeledPrice
 import my_cfg
 import sending
+import random
 
 #точка входа главного меню, корень всех ветвлений
 def case_main(call, bot):
@@ -63,12 +64,12 @@ def shinobu(chat_id, btn_data):
     #кнопка, открывающая меню с отправкой пикчи с Шинобу
     elif btn_data == '1/1':
         (text, reply_markup) = keyboards.shinobu_pic()
-        photo_data = (common_methods.get_shinobu_pic(), True, 'Лучшая девочка', None)
+        photo_data = (common_methods.get_url_data_pic(is_single_pic = 1, tag = 'oshino_shinobu', page = random.randint(1, 200)), True, 'Лучшая девочка', None)
     #кнопка, заново генерирующая тоже меню, где находится, но меняет текст самого меню (чтобы телеграм не давал ошибку) и отправляющая повторно пикчу
     elif btn_data == '1/1/1':
         (text, reply_markup) = keyboards.shinobu_pic()
         text = queries_to_bd.get_last_bot_text_menu(chat_id)
-        photo_data = (common_methods.get_shinobu_pic(), True, 'Держи еще', None)
+        photo_data = (common_methods.get_url_data_pic(is_single_pic = 1, tag = 'oshino_shinobu', page = random.randint(1, 200)), True, 'Держи еще', None)
     #кнопка, возвращающая на основное меню Шинобу из меню пикчи с Шинобу
     elif btn_data == '1/1/2':
         (text, reply_markup) = keyboards.shinobu_main()
