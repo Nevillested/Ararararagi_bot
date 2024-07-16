@@ -25,21 +25,9 @@ def get_url_data_pic(is_single_pic, tag, page):
     if len(response_list) != 0:
         for item in response_list:
             if 'variants' in item['media_asset']:
-                if tag != 'oshino_shinobu' and (item['rating']).lower() == 'e': #https://danbooru.donmai.us/wiki_pages/howto:rate
-
-                    cnt += 1
-                    result = types.InlineQueryResultPhoto(
-                        id = str(cnt),
-                        photo_url = (((item['media_asset'])['variants'])[-1])['url'],
-                        thumbnail_url = (((item['media_asset'])['variants'])[0])['url'],
-                        caption = '<span class="tg-spoiler">' + item['tag_string_character'] + '</span>',
-                        parse_mode='html'
-                    )
-                    array_of_InlineQueryResultPhoto.append(result)
-                    array_of_string_url.append((((item['media_asset'])['variants'])[-1])['url'])
-
+                if item['file_size'] > 20000000 or (tag == 'oshino_shinobu' and (item['rating']).lower() == 'e'): #https://danbooru.donmai.us/wiki_pages/howto:rate
+                    None
                 else:
-
                     cnt += 1
                     result = types.InlineQueryResultPhoto(
                         id = str(cnt),
@@ -55,8 +43,6 @@ def get_url_data_pic(is_single_pic, tag, page):
         return array_of_InlineQueryResultPhoto
     else:
         return random.choice(array_of_string_url)
-
-#title=None, description=None, caption=None, reply_markup=None, input_message_content=None, parse_mode=None, caption_entities=None, show_caption_above_media=None
 
 ############################### отправляет рандомный стикер с Шинобу из имеющегося локально набора стикеров ###############################
 def get_shinobu_stick():
