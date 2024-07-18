@@ -17,7 +17,7 @@ def get_url_data_pic(is_single_pic, tag, page):
 
     array_of_InlineQueryResultPhoto = []
     array_of_string_url = []
-    url_string = "https://danbooru.donmai.us/posts.json?" + my_cfg.danboru_api_key + "&tags=" + tag + "&page=" + str(page)
+    url_string = "https://danbooru.donmai.us/posts.json?" + my_cfg.danboru_api_key + "&tags=" + tag.replace(',','&') + "&page=" + str(page)
     response = requests.get(url_string)
     response_list = response.json()
     cnt = 0
