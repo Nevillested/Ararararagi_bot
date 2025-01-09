@@ -656,3 +656,20 @@ def get_current_holiday():
     if result_tuple != None:
         result_str = str(result_tuple[0])
     return result_str
+
+#проверяет была ли отправка рассылки или напоминалок за текущее время. Если была, возвращает 1, если нет - возвращает 0
+def get_flg_sent(datetime_txt):
+    cur.execute("""
+    select count(*)
+      from arabot.scheduler_stamp
+     where datetime_txt = '""" + str(datetime_txt) + """';
+    """)
+    result_tuple = cur.fetchone()
+    result = str(result_tuple[0])
+    return int(result)
+
+#обновляет данные о том, что произошла отправка
+def upd_flg_sent(datetime_txt):
+    cur.execute("""
+    UPDATE arabot.scheduler_stamp SET datetime_txt = '""" + str(datetime_txt) + """';
+    """)
