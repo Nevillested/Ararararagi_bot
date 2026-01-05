@@ -16,4 +16,4 @@ COPY assets/stickers assets/stickers
 COPY assets/temp assets/temp
 
 # Точка входа
-CMD ["python", "PyBot.py"]
+CMD ["python", "-u", "PyBot.py"]

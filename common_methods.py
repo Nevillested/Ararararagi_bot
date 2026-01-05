@@ -99,7 +99,7 @@ def prepare_music_data():
         list_data_of_music_files.append([item_zero, item_one, item_two, item_three, item_four])
 
     #раскомментировать, если появится новая музыка
-    #queries_to_bd.gen_music_data(list_data_of_music_files)
+    queries_to_bd.gen_music_data(list_data_of_music_files)
 
 ############################### Метод шифрования и дешифрования ###############################
 def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):

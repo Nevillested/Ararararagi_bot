@@ -1,0 +1,16 @@
+# 1. Остановить и удалить контейнер
+docker stop ararararagi-bot
+docker rm -f ararararagi-bot
+
+# 2. Пересобрать образ (из папки бота!)
+cd /home/g1ts0/Github/Ararararagi_bot
+docker build -t ararararagi-bot .
+
+# 3. Запустить контейнер с пробросом music
+docker run -d --name ararararagi-bot \
+  --restart unless-stopped \
+  -v /home/g1ts0/Github/Ararararagi_bot/assets/music:/app/assets/music \
+  ararararagi-bot
+
+# 4. Смотреть логи в реальном времени (print(), traceback, всё)
+docker logs -f ararararagi-bot
