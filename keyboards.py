@@ -583,12 +583,12 @@ def get_random(btn_data, chat_id):
         new_text = "Нет!"
 
     #если была нажата кнопка "еще", нужно проверить, что старый ответ не равен текущему. Если равен - надо мальца видоизменить
-    if btn_data == "9/5/1":
+    if btn_data == "9/4/1":
         if new_text == old_text:
             new_text += '!'
 
     cnt_object_in_row = 2
-    dict_of_buttons = {"Еще разок!" : "9/5/1", "Назад" : "9"}
+    dict_of_buttons = {"Еще разок!" : "9/4/1", "Назад" : "9"}
     reply_to = create_inline_kb(dict_of_buttons, cnt_object_in_row)
     return new_text, reply_to
 

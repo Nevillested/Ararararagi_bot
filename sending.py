@@ -52,8 +52,10 @@ def main(bot, chat_id, text_data = None, photo_data = None, poll_data = None, au
     if audio_data != None:
 
         #отправляем сообщение, чтобы подождал мальца, тк файл весит много (пробуем отправить - вдруг мы в блоке)
+        msg_txt = 'Сейчас прилетит, погоди'
+
         try:
-            bot.send_message(chat_id, 'Сейчас прилетит, погоди')
+            bot.send_message(chat_id, msg_txt)
             l_flg_sent = 1
         except:
             l_flg_sent = 0
@@ -63,13 +65,17 @@ def main(bot, chat_id, text_data = None, photo_data = None, poll_data = None, au
             msg_id_outcome += 1
 
             #сохраняем, что отправили
-            queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'text', 'Сейчас прилетит, погоди', 0, 0)
+            queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'text', msg_txt, 0, 0)
 
             l_flg_sent = 0
 
         #отправляем аудио-файл (пробуем отправить - вдруг мы в блоке)
         try:
-            bot.send_audio(chat_id, audio=open(audio_data, 'rb'))
+            #по настройкам приватности у пользователя может стоять, что он запретил присылать войсы, в таком случае отправка войса упадет в ошибку. Но и на это есть решение - можно отправки войс документом!
+            try:
+                bot.send_voice(chat_id, open(audio_data, 'rb'))
+            except:
+                bot.send_document(chat_id, document = open(audio_data, 'rb'))
             l_flg_sent = 1
         except:
             l_flg_sent = 0
