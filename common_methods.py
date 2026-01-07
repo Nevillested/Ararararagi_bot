@@ -183,7 +183,9 @@ def convert_speech_to_text(lang, file_path_ogg):
 
     file_path_wav = file_path_ogg.replace('.ogg', '.wav')
 
-    process = subprocess.run(['ffmpeg','-y', '-i', file_path_ogg, file_path_wav])
+    #process = subprocess.run(['ffmpeg','-y', '-i', file_path_ogg, file_path_wav])
+
+    process = subprocess.run(['./ffmpeg/ffmpeg','-y','-i', file_path_ogg,file_path_wav],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
 
     rec_lang = None
 

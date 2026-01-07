@@ -2,18 +2,30 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Копируем зависимости и устанавливаем их
+# ──────────────
+# Python deps
+# ──────────────
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем все .py файлы
+# ──────────────
+# Bot source
+# ──────────────
 COPY *.py ./
 
-# Копируем assets, кроме music
-RUN mkdir -p assets
-COPY assets/maids assets/maids
-COPY assets/stickers assets/stickers
-COPY assets/temp assets/temp
+# ──────────────
+# ffmpeg (static, локальный)
+# ──────────────
+COPY ffmpeg/ ffmpeg/
+RUN chmod +x ffmpeg/ffmpeg ffmpeg/ffprobe
 
-# Точка входа
+# ──────────────
+# ENV для ffmpeg
+# ──────────────
+ENV FFMPEG_PATH=/app/ffmpeg/ffmpeg
+
+# ──────────────
+# Start bot
+# ──────────────
 CMD ["python", "-u", "PyBot.py"]
+
