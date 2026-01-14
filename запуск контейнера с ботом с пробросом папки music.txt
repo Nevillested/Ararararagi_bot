@@ -9,6 +9,7 @@ docker build -t ararararagi-bot .
 # 3. Запустить контейнер с пробросом music
 docker run -d --name ararararagi-bot \
   --restart unless-stopped \
+  -e TZ=Asia/Tokyo \
   -v /home/g1ts0/Github/Ararararagi_bot/assets:/app/assets \
   ararararagi-bot
 
