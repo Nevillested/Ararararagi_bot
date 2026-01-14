@@ -59,16 +59,35 @@ music_path = str(os.getcwd()) + "/assets/music"
 
 list_data_of_music_files = list()
 
-#получение списка с путями всех файлов в текущей директории
+audio_formats = {
+    "wav", "aiff", "aif", "au", "pcm", "bwf",
+    "flac", "alac", "ape", "wv", "tak", "tta", "shn",
+    "mp3", "aac", "m4a", "ogg", "opus", "wma",
+    "atrac", "atrac3", "atrac3plus",
+    "ac3", "eac3", "dts",
+    "amr", "amr-wb", "speex",
+    "mpc", "lc-aac", "he-aac", "he-aacv2",
+    "qcelp", "ra", "rm",
+    "mod", "xm", "s3m", "it", "mtm", "669",
+    "ult", "far", "stm",
+    "mid", "midi", "rmi", "kar",
+    "dsf", "dff",
+    "caf", "mka", "nut", "3ga",
+    "voc", "8svx", "16svx", "iff",
+    "dvf", "dss", "msv", "gsm", "sd2"
+}
+
+#получение списка с путями всех музыкальных файлов в текущей директории
 def getListOfPathFiles(current_path):
-    allFiles = list()
-    listOfFile = os.listdir(current_path)
-    for entry in listOfFile:
+    allFiles = []
+    for entry in os.listdir(current_path):
         fullPath = os.path.join(current_path, entry)
         if os.path.isdir(fullPath):
-            allFiles = allFiles + getListOfPathFiles(fullPath)
+            allFiles.extend(getListOfPathFiles(fullPath))
         else:
-            allFiles.append(fullPath)
+            ext = os.path.splitext(entry)[1].lower().lstrip(".")
+            if ext in audio_formats:
+                allFiles.append(fullPath)
     return allFiles
 
 #выдает индекс н-ного вхождение подстроки в строке
