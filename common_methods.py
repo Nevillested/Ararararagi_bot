@@ -4,7 +4,6 @@ from telebot import types
 from gtts import gTTS
 import queries_to_bd
 import subprocess
-import keyboards
 import requests
 import my_cfg
 import random
@@ -87,7 +86,8 @@ def getListOfPathFiles(current_path):
         else:
             ext = os.path.splitext(entry)[1].lower().lstrip(".")
             if ext in audio_formats:
-                allFiles.append(fullPath)
+                if "_compressed" not in fullPath:
+                    allFiles.append(fullPath)
     return allFiles
 
 #выдает индекс н-ного вхождение подстроки в строке
@@ -97,28 +97,84 @@ def find_nth(string, substring, n):
    else:
        return string.find(substring, find_nth(string, substring, n - 1) + 1)
 
+#сжимает аудио до размера 50 мб и меньше через ffmpeg
+def compress_audio_to_limit(input_path, output_path, max_size_mb=50):
+
+    bitrate = 320  # начальный битрейт kbps
+    ext = os.path.splitext(output_path)[1].lower()
+
+    # Выбор кодека по формату
+    if ext == ".m4a":
+        codec = "aac"
+    elif ext == ".mp3":
+        codec = "libmp3lame"
+    else:
+        codec = "aac"
+    while True:
+        cmd = [
+            "./ffmpeg/ffmpeg",
+            "-y",
+            "-i", input_path,
+            "-vn",              # ИГНОРИРУЕМ видеопоток
+            "-c:a", codec,
+            "-b:a", f"{bitrate}k",
+            output_path
+        ]
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        file_size = os.stat(output_path).st_size / (1024*1024)
+        if file_size <= max_size_mb or bitrate <= 32:
+            break
+        bitrate -= 16
+    return output_path
+
 #подготовка данных по музыке
 def prepare_music_data():
-    #создаем список с путями всех файлов в текущей директориим
+    list_data_of_music_files = []
+     #создаем список с путями всех файлов в текущей директориим
     list_of_full_path_all_files = sorted(getListOfPathFiles(music_path))
-    #а теперь наполняем новый список (list_data_of_music_files) кортежами, каждый из которых состоит из 4 элементов, где:
-    #item_zero   0 элемент списка - буква, с которой начинается название группы
-    #item_one    1 элемент списка - название группы
-    #item_two    2 элемент списка - название альбома
-    #item_three  3 элемент списка - название песни
+     #item_zero   0 элемент списка - буква, с которой начинается название группы
+     #item_one    1 элемент списка - название группы
+     #item_two    2 элемент списка - название альбома
+     #item_three  3 элемент списка - название песни
+
     for path_of_file in list_of_full_path_all_files:
-        #не очень красиво, что дирректория прописана вручную, но поправлю позже через os get cwd. Попробуй подключиться, если сможешь:)
         unique_item = path_of_file.replace(str(os.getcwd()) + r'/assets/music/','')
 
         item_zero  = (unique_item[0]).upper()
         item_one   = unique_item[0:find_nth(unique_item,r'/',1)]
         item_two   = unique_item[find_nth(unique_item,r'/',1)+1:find_nth(unique_item,r'/',2)]
         item_three = unique_item[find_nth(unique_item,r'/',2)+1:unique_item.rindex('.')]
-        item_four  = path_of_file
+        item_four = ""
+
+        # считаем размер оригинального файла
+        orig_size_mb = os.stat(path_of_file).st_size / (1024*1024)
+
+        if orig_size_mb <= 50:
+            # оригинальный файл достаточно маленький — используем его
+            item_four = path_of_file
+        else:
+            # формируем путь к сжатой версии
+            base, ext = os.path.splitext(path_of_file)
+            compressed_path = f"{base}_compressed{ext}"
+            if os.path.exists(compressed_path):
+                compressed_size_mb = os.stat(compressed_path).st_size / (1024*1024)
+                if compressed_size_mb == 0:
+                    # файл пустой — удаляем и пересжимаем
+                    os.remove(compressed_path)
+                    compress_audio_to_limit(path_of_file, compressed_path)
+                    item_four = compressed_path
+                else:
+                    item_four = compressed_path
+            else:
+                # сжатого файла нет → создаем
+                compress_audio_to_limit(path_of_file, compressed_path)
+                item_four = compressed_path
+
         list_data_of_music_files.append([item_zero, item_one, item_two, item_three, item_four])
 
     #раскомментировать, если появится новая музыка
-    queries_to_bd.gen_music_data(list_data_of_music_files)
+    #queries_to_bd.gen_music_data(list_data_of_music_files)
+
 
 ############################### Метод шифрования и дешифрования ###############################
 def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):

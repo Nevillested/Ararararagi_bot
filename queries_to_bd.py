@@ -242,6 +242,12 @@ def set_msg_menu_as_inactive(msg_id):
 def gen_music_data(list_data_of_music_files):
     #очищаем таблицу
     cur.execute("""truncate table arabot.music_files""")
+
+
+    for item in list_data_of_music_files:
+        if item[1].lower() == "metallica" and item[2].lower() == "master of puppets":
+            print(item[4])
+
     #наполянем данными по существующим группам-альбомам-песням
     for item in list_data_of_music_files:
         sql_stmt = """
@@ -348,7 +354,7 @@ def get_performer_id_by_album_id(album_id):
     result_string = result_tuple[0]
     return result_string
 
-#получает ID исполнителей по ID первой пуквы исполнителей
+#получает ID исполнителей по ID первой буквы исполнителей
 def get_first_char_preformer_id_by_performer_id(performer_id):
     cur.execute("""
     SELECT distinct first_char_performer_id
@@ -358,6 +364,21 @@ def get_first_char_preformer_id_by_performer_id(performer_id):
     result_tuple = cur.fetchone()
     result_string = result_tuple[0]
     return result_string
+
+#получает список всех имеющихся исполнителей и песен, а также пути в файловой системе к ним
+def get_full_list_music_files():
+    cur.execute("""
+    SELECT performer_display_name,
+           song_display_name,
+           path_to_file
+      FROM arabot.music_files
+    """)
+    rows = cur.fetchall()
+    
+    # Создаём список (название, путь, процент схожести):
+    music_list = [(item[0], item[1], item[2], 0.0) for item in rows]
+    
+    return music_list
 
 #выдает словарь всех существующих подписок в словаре
 def get_dict_of_full_subs():

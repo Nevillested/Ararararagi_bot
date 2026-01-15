@@ -1,5 +1,4 @@
 from telebot import types
-import my_cfg
 import queries_to_bd
 import datetime
 import calendar
