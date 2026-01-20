@@ -243,11 +243,6 @@ def gen_music_data(list_data_of_music_files):
     #очищаем таблицу
     cur.execute("""truncate table arabot.music_files""")
 
-
-    for item in list_data_of_music_files:
-        if item[1].lower() == "metallica" and item[2].lower() == "master of puppets":
-            print(item[4])
-
     #наполянем данными по существующим группам-альбомам-песням
     for item in list_data_of_music_files:
         sql_stmt = """

@@ -6,6 +6,7 @@ import os
 import queries_to_bd
 import requests
 import urllib.parse
+import subprocess
 
 def main(bot, query):
 
@@ -107,11 +108,17 @@ def main(bot, query):
                 #кодируем URL
                 url_path = "/music/" + "/".join([urllib.parse.quote(part) for part in relative_path.split(os.sep)])
 
+                #длительность песни в секундах
+                process = subprocess.run(
+                    ['./ffmpeg/ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+                    '-of', 'default=noprint_wrappers=1:nokey=1', path],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                )
+
+                duration_sec = int(float(process.stdout.strip()))
+
                 #полный публичный URL
                 audio_url = public_url + url_path
-
-                print(audio_url)
-                print(size_mb)
 
                 #отправляем песню как аудио, если mp3/m4a
                 if size_mb < 50:
@@ -119,7 +126,8 @@ def main(bot, query):
                         id=str(cnt),
                         audio_url=audio_url,
                         title=song,
-                        performer=performer
+                        performer=performer,
+                        audio_duration=duration_sec
                     )
                 #для остальных форматов отправляем как документ
                 else:

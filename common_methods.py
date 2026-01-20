@@ -144,31 +144,31 @@ def prepare_music_data():
         item_one   = unique_item[0:find_nth(unique_item,r'/',1)]
         item_two   = unique_item[find_nth(unique_item,r'/',1)+1:find_nth(unique_item,r'/',2)]
         item_three = unique_item[find_nth(unique_item,r'/',2)+1:unique_item.rindex('.')]
-        item_four = ""
+        item_four  = path_of_file
 
         # считаем размер оригинального файла
-        orig_size_mb = os.stat(path_of_file).st_size / (1024*1024)
+        #orig_size_mb = os.stat(path_of_file).st_size / (1024*1024)
 
-        if orig_size_mb <= 50:
-            # оригинальный файл достаточно маленький — используем его
-            item_four = path_of_file
-        else:
-            # формируем путь к сжатой версии
-            base, ext = os.path.splitext(path_of_file)
-            compressed_path = f"{base}_compressed{ext}"
-            if os.path.exists(compressed_path):
-                compressed_size_mb = os.stat(compressed_path).st_size / (1024*1024)
-                if compressed_size_mb == 0:
-                    # файл пустой — удаляем и пересжимаем
-                    os.remove(compressed_path)
-                    compress_audio_to_limit(path_of_file, compressed_path)
-                    item_four = compressed_path
-                else:
-                    item_four = compressed_path
-            else:
-                # сжатого файла нет → создаем
-                compress_audio_to_limit(path_of_file, compressed_path)
-                item_four = compressed_path
+        #if orig_size_mb <= 50:
+        #    # оригинальный файл достаточно маленький — используем его
+        #    item_four = path_of_file
+        #else:
+            ## формируем путь к сжатой версии
+            #base, ext = os.path.splitext(path_of_file)
+            #compressed_path = f"{base}_compressed{ext}"
+            #if os.path.exists(compressed_path):
+            #    compressed_size_mb = os.stat(compressed_path).st_size / (1024*1024)
+            #    if compressed_size_mb == 0:
+            #        # файл пустой — удаляем и пересжимаем
+            #        os.remove(compressed_path)
+            #        compress_audio_to_limit(path_of_file, compressed_path)
+            #        item_four = compressed_path
+            #    else:
+            #        item_four = compressed_path
+            #else:
+            #    # сжатого файла нет → создаем
+            #    compress_audio_to_limit(path_of_file, compressed_path)
+            #    item_four = compressed_path
 
         list_data_of_music_files.append([item_zero, item_one, item_two, item_three, item_four])
 
