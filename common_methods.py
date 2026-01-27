@@ -10,6 +10,7 @@ import random
 import segno
 import json
 import os
+import sending
 
 ############################### выдает массив или одиночну ссылку на пикчу по заданному тегу с данбору ###############################
 def get_url_data_pic(is_single_pic, tag, page):
@@ -97,38 +98,9 @@ def find_nth(string, substring, n):
    else:
        return string.find(substring, find_nth(string, substring, n - 1) + 1)
 
-#сжимает аудио до размера 50 мб и меньше через ffmpeg
-def compress_audio_to_limit(input_path, output_path, max_size_mb=50):
-
-    bitrate = 320  # начальный битрейт kbps
-    ext = os.path.splitext(output_path)[1].lower()
-
-    # Выбор кодека по формату
-    if ext == ".m4a":
-        codec = "aac"
-    elif ext == ".mp3":
-        codec = "libmp3lame"
-    else:
-        codec = "aac"
-    while True:
-        cmd = [
-            "./ffmpeg/ffmpeg",
-            "-y",
-            "-i", input_path,
-            "-vn",              # ИГНОРИРУЕМ видеопоток
-            "-c:a", codec,
-            "-b:a", f"{bitrate}k",
-            output_path
-        ]
-        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        file_size = os.stat(output_path).st_size / (1024*1024)
-        if file_size <= max_size_mb or bitrate <= 32:
-            break
-        bitrate -= 16
-    return output_path
-
 #подготовка данных по музыке
-def prepare_music_data():
+def prepare_music_data(bot):
+
     list_data_of_music_files = []
      #создаем список с путями всех файлов в текущей директориим
     list_of_full_path_all_files = sorted(getListOfPathFiles(music_path))
@@ -145,36 +117,34 @@ def prepare_music_data():
         item_two   = unique_item[find_nth(unique_item,r'/',1)+1:find_nth(unique_item,r'/',2)]
         item_three = unique_item[find_nth(unique_item,r'/',2)+1:unique_item.rindex('.')]
         item_four  = path_of_file
-
-        # считаем размер оригинального файла
-        #orig_size_mb = os.stat(path_of_file).st_size / (1024*1024)
-
-        #if orig_size_mb <= 50:
-        #    # оригинальный файл достаточно маленький — используем его
-        #    item_four = path_of_file
-        #else:
-            ## формируем путь к сжатой версии
-            #base, ext = os.path.splitext(path_of_file)
-            #compressed_path = f"{base}_compressed{ext}"
-            #if os.path.exists(compressed_path):
-            #    compressed_size_mb = os.stat(compressed_path).st_size / (1024*1024)
-            #    if compressed_size_mb == 0:
-            #        # файл пустой — удаляем и пересжимаем
-            #        os.remove(compressed_path)
-            #        compress_audio_to_limit(path_of_file, compressed_path)
-            #        item_four = compressed_path
-            #    else:
-            #        item_four = compressed_path
-            #else:
-            #    # сжатого файла нет → создаем
-            #    compress_audio_to_limit(path_of_file, compressed_path)
-            #    item_four = compressed_path
-
         list_data_of_music_files.append([item_zero, item_one, item_two, item_three, item_four])
 
     #раскомментировать, если появится новая музыка
-    #queries_to_bd.gen_music_data(list_data_of_music_files)
+    queries_to_bd.gen_music_data(list_data_of_music_files)
 
+    #отправка в тестовый чат все песни подряд, чтобы получить file_id и сохранить его в бд
+    music_list = queries_to_bd.get_music_files_without_id()
+
+    #отправляем в тестовый чат все песни без file_id, чтобы они были загружены на сервер тг.
+    for item in music_list:
+        performer_display_name = item[0]
+        album_display_name = item[1]
+        song_display_name = item[2]
+        path_to_file = item[3]
+        audio_data = ('song', path_to_file, None, performer_display_name, album_display_name, song_display_name)
+        sending.main(bot, 1275894304, audio_data = audio_data)
+
+def get_duration_song(path):
+    process = subprocess.run(
+        ['./ffmpeg/ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1', path],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
+    try:
+        duration_sec = int(float(process.stdout.strip()))
+    except Exception:
+        duration_sec = None
+    return duration_sec
 
 ############################### Метод шифрования и дешифрования ###############################
 def encrypting_decrypting(operation_type, lang_code, key, text_to_oper):

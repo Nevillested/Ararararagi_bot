@@ -24,18 +24,18 @@ def main(bot, chat_id, msg_id = None):
         for msg in array_msg_id:
 
             if msg != -1:
+
                 try:
                     #...пытается их удалить
                     bot.delete_message(chat_id = chat_id, message_id = msg)
-                    queries_to_bd.set_msg_menu_as_inactive(msg)
 
                 except:
 
                     try:
                         #может не получится удалить, тк прошло больше 48 часов, в таком случае, редактируем их
                         bot.edit_message_text(chat_id = chat_id, message_id = msg, text = 'Потрачено')
-                        queries_to_bd.set_msg_menu_as_inactive(msg)
 
                     except:
-                        queries_to_bd.set_msg_menu_as_inactive(msg)
-                        queries_to_bd.save_error(str(traceback.format_exc()))
+                        None
+                    
+                queries_to_bd.set_msg_menu_as_inactive(msg)

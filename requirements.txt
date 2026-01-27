@@ -6,3 +6,4 @@ segno
 transliterate
 psycopg2-binary
 geopandas
+geopy

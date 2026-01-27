@@ -10,11 +10,12 @@ import telebot
 import my_cfg
 import time
 import traceback
-
-#на этапе запуска бота подготовим данные для кнопок музыки, тк самой музыки очень много
-common_methods.prepare_music_data()
+from telebot import apihelper
 
 MypyBot = telebot.TeleBot(my_cfg.telegram_token)
+
+#на этапе запуска бота подготовим данные для кнопок музыки, тк самой музыки очень много
+common_methods.prepare_music_data(MypyBot)
 
 CONTENT_TYPES = ["text", "audio", "document", "photo", "sticker", "video", "video_note", "voice", "location", "contact", "pinned_message"]
 
@@ -99,15 +100,14 @@ child_thread.start()
 def start_bot():
     while True:
 
-        #try:
-            print('Запуск бота')
-            MypyBot.polling()
+        try:
+           print('Запуск бота')
+           MypyBot.polling()
 
-        #except:
+        except:
+            print('Произошла ошибка, логируемся.')
+            queries_to_bd.save_error(str(traceback.format_exc()))
+            time.sleep(5)
 
-        #    print('Произошла ошибка, логируемся.')
-        #    queries_to_bd.save_error(str(traceback.format_exc()))
-        #    time.sleep(5)
-#
 #запускаем бота
 start_bot()

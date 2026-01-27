@@ -93,11 +93,8 @@ def music_songs_in_album(album_id):
     return text, reply_to
 
 #получает последнее меню
-def music_menu_last(flg_success_size, song_id):
-    if flg_success_size == 1:
-        text = "Держи"
-    elif flg_success_size == 0:
-        text = "Соре, файл весит больше 50 мб, телега не позволяет ботам отправлять такие файлы."
+def music_menu_last(song_id):
+    text = "Держи"
     reply_to = create_inline_kb({"Назад" : "2/back_1/" + song_id}, 1)
     return text, reply_to
 

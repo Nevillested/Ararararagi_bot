@@ -66,7 +66,7 @@ def main(bot, message):
                 lang_code = (what_is_current_context.split('/'))[-2]
 
                 #получаем путь, по которому лежит аудиофайл
-                audio_data = common_methods.convert_text_to_speech(str(message.chat.id), message.text, lang_code)
+                audio_data = ('voice',common_methods.convert_text_to_speech(str(message.chat.id), message.text, lang_code))
 
                 #получает последнее меню по ветке распознавания войса в текст
                 (current_result_text, current_reply_markup) = keyboards.text_speech_result_voice(message.text, lang_code)

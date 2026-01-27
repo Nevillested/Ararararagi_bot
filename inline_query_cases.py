@@ -12,7 +12,7 @@ def main(bot, query):
 
     results = []
 
-    query_text = query.query
+    query_text = (query.query).lower()
 
     cnt = 0
 
@@ -70,90 +70,46 @@ def main(bot, query):
 
     #получение музыки из библиотеки
     elif query_text.find("music") >= 0:
-    
+
         # получаем текст после "music " и приводим к нижнему регистру
-        search_text = query_text[6:].strip().lower()
-    
-        # получаем весь список песен из БД
-        music_list = queries_to_bd.get_full_list_music_files()  # [(performer, song, path, 0.0), ...]
+        search_text = query_text[query_text.lower().find("music") + 5:].strip().lower()
 
-        try:
+        # получаем список песен из БД
+        music_list = queries_to_bd.get_full_list_music_files()  
 
-            #получаем текущий публичный ngrok URL
-            ngrok_api = "http://ngrok:4040/api/tunnels"
-            tunnels = requests.get(ngrok_api).json()["tunnels"]
-            public_url = tunnels[0]["public_url"]  
+        #создаем список, в котором будут песни, больше всего совпавшие с текстом пользователя
+        updated_music_list = []
 
-            #вычисляем процент схожести и сохраняем в 4-е значение
-            updated_music_list = []
+        #наполняем список с песнями для пользователя
+        for performer, song, tg_file_id in music_list:
+            full_title = f"{performer} {song}"
+            similarity = SequenceMatcher(None, full_title.lower(), search_text).ratio()
+            updated_music_list.append((performer, song, similarity, tg_file_id))
 
-            for performer, song, path, _ in music_list:
-                full_title = f"{performer} {song}"
-                similarity = SequenceMatcher(None, full_title.lower(), search_text).ratio()
-                updated_music_list.append((performer, song, path, similarity))
+        # сортируем по убыванию схожести и берем топ-5
+        top_music = sorted(updated_music_list, key=lambda x: x[2], reverse=True)[:50]
 
-            # ортируем по убыванию схожести и берём топ-5
-            top_music = sorted(updated_music_list, key=lambda x: x[3], reverse=True)[:5]
+        results = []
 
-            #формируем результаты для inline query
-            for cnt, (performer, song, path, similarity) in enumerate(top_music, start=1):
-                ext = os.path.splitext(path)[1].lower()
-                full_title = f"{performer} - {song}"
+        for cnt, (performer, song, similarity, tg_file_id) in enumerate(top_music, start=1):
 
-                size_mb = os.stat(path).st_size / (1024*1024)
-
-                #формируем относительный путь от папки /music/ для URL
-                relative_path = os.path.relpath(path, "/app/assets/music")
-
-                #кодируем URL
-                url_path = "/music/" + "/".join([urllib.parse.quote(part) for part in relative_path.split(os.sep)])
-
-                #длительность песни в секундах
-                process = subprocess.run(
-                    ['./ffmpeg/ffprobe', '-v', 'error', '-show_entries', 'format=duration',
-                    '-of', 'default=noprint_wrappers=1:nokey=1', path],
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            if tg_file_id != None:
+                # если есть file_id, используем CachedAudio
+                result = types.InlineQueryResultCachedAudio(
+                    id=str(cnt),
+                    audio_file_id=tg_file_id
+                )
+            else:
+                result = types.InlineQueryResultArticle(
+                    id = str(cnt),
+                    title = 'Я все сказал.',
+                    input_message_content = types.InputTextMessageContent('Попробуй отправить через обычное меню'),
+                    description = 'Песня пока не закэширована в телеге'
                 )
 
-                duration_sec = int(float(process.stdout.strip()))
+            results.append(result)
 
-                #полный публичный URL
-                audio_url = public_url + url_path
-
-                #отправляем песню как аудио, если mp3/m4a
-                if size_mb < 50:
-                    result = types.InlineQueryResultAudio(
-                        id=str(cnt),
-                        audio_url=audio_url,
-                        title=song,
-                        performer=performer,
-                        audio_duration=duration_sec
-                    )
-                #для остальных форматов отправляем как документ
-                else:
-                    result = types.InlineQueryResultArticle(
-                        id=str(cnt),
-                        title=performer + ': ' + song,
-                        input_message_content=types.InputTextMessageContent(
-                            audio_url
-                        ),
-                        description="Файл слишком большой. Открыть файл в браузере"
-                    )
-
-                results.append(result)
-
-        except Exception as e:
-            print("Ошибка получения ngrok URL:", e)
-
-            result = types.InlineQueryResultArticle(
-                id="1",
-                title="Какая-то ошибка",
-                input_message_content=types.InputTextMessageContent(
-                    "Тут должна быть песня, но пока что что-то не работает."
-                ),
-                description="ничего не знаю"
-            )
-
-            bot.answer_inline_query(query.id, [result], cache_time=0)
-
-    bot.answer_inline_query(query.id, results, cache_time = 0, next_offset = offset)
+    try:
+        bot.answer_inline_query(query.id, results, cache_time = 0, next_offset = offset)
+    except:
+        None

@@ -1,4 +1,6 @@
 import queries_to_bd
+import common_methods
+from telebot.apihelper import ApiTelegramException
 
 #это метод, через который мы будем отправлять все сообщения. Слишком много отправок разбросано по файлам, поэтому унифицируем это дело
 def main(bot, chat_id, text_data = None, photo_data = None, poll_data = None, audio_data = None, invoice_data = None, sticker_data = None, document_data = None):
@@ -51,41 +53,126 @@ def main(bot, chat_id, text_data = None, photo_data = None, poll_data = None, au
     #отправка музыки
     if audio_data != None:
 
-        #отправляем сообщение, чтобы подождал мальца, тк файл весит много (пробуем отправить - вдруг мы в блоке)
-        msg_txt = 'Сейчас прилетит, погоди'
 
+        #ловля ошибок, вдруг бот в блоке
         try:
-            bot.send_message(chat_id, msg_txt)
-            l_flg_sent = 1
-        except:
-            l_flg_sent = 0
+            #отправляем сообщение, чтобы подождал мальца, тк иногад файл весит много
+            msg_txt = 'Сейчас прилетит, погоди'
 
-        if l_flg_sent == 1:
+            bot.send_message(chat_id, msg_txt)
+
             #инкрементируем msg_id, тк мы только что отправли msg
             msg_id_outcome += 1
 
             #сохраняем, что отправили
             queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'text', msg_txt, 0, 0)
-
-            l_flg_sent = 0
-
-        #отправляем аудио-файл (пробуем отправить - вдруг мы в блоке)
-        try:
-            #по настройкам приватности у пользователя может стоять, что он запретил присылать войсы, в таком случае отправка войса упадет в ошибку. Но и на это есть решение - можно отправки войс документом!
-            try:
-                bot.send_voice(chat_id, open(audio_data, 'rb'))
-            except:
-                bot.send_document(chat_id, document = open(audio_data, 'rb'))
-            l_flg_sent = 1
         except:
-            l_flg_sent = 0
+            None
 
-        if l_flg_sent == 1:
-            #инкрементируем msg_id, тк мы только что отправли msg
-            msg_id_outcome += 1
+        #вытаскиваем тип аудио
+        audio_type = audio_data[0]
 
-            #сохраняем, что отправили
-            queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'audio', audio_data, 0, 0)
+        #вытаскиваем директорию аудио
+        audio_path = audio_data[1]
+
+        #если это войс, то...
+        if audio_type == 'voice':
+
+            #ловля ошибок, вдруг бот в блоке
+            try:
+
+                #пытаемся отправить войс, но по настройкам приватности, они могут быть запрещены у пользователя
+                try:
+
+                    bot.send_voice(chat_id, open(audio_path, 'rb'))
+                    
+                    msg_type = 'audio voice'
+
+                    msg_txt = audio_path
+
+                except ApiTelegramException as e:
+
+                    msg_type = 'text'
+
+                    if "VOICE_MESSAGES_FORBIDDEN" in e.result_json.get("description", ""):
+
+                        msg_txt = "Вам запрещены голосовые сообщения 😔"
+
+                        bot.send_message(chat_id, msg_txt)
+
+                    else:
+
+                        msg_txt = "Что-то пошло не так. Я пока не понял, но пойму."
+
+                        bot.send_message(chat_id, msg_txt)
+
+                msg_id_outcome += 1
+
+                queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, msg_type, msg_txt, 0, 0)
+
+            except:
+                None
+
+        #если это песня, то...
+        if audio_type == 'song':
+
+            audio_tg_file_id = audio_data[2]
+            audio_performer = audio_data[3]
+            audio_album = audio_data[4]
+            audio_song = audio_data[5]
+
+            #Сначала попробуем отправить по file_id:
+            if audio_tg_file_id != None:
+
+                #ловля ошибок, если вдруг бот в блоке
+                try:
+                    #отправляем через метод send_audio...
+                    bot.send_audio(chat_id, audio_tg_file_id)
+
+                    #инкрементируем msg_id, тк мы только что отправли msg
+                    msg_id_outcome += 1
+
+                    #сохраняем, что отправили
+                    queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'audio voice', audio_path, 0, 0)
+
+                except:
+                    None
+
+            #если file_id еще нету, создадим его
+            else:
+
+                #ловля ошибок, если вдруг бот в блоке
+                try:
+
+                    #сначала попробуем отправить методом send_audio
+                    try:
+
+                        audio_duration = common_methods.get_duration_song(audio_path)
+    
+                        with open(audio_path, "rb") as f:
+                            msg = bot.send_audio(chat_id, f, title = audio_song, performer = audio_performer, duration = audio_duration, timeout = 300)
+    
+                        tg_file_id = msg.audio.file_id
+
+                    #методом send_audio не всегда получается, поэтому в исключительных случаях - пробуем через send_document
+                    except:
+
+                        with open(audio_path, 'rb') as f:
+                            msg = bot.send_document(chat_id, document=f, timeout = 300)
+
+                        tg_file_id = msg.document.file_id
+
+                    queries_to_bd.update_music_file_id(audio_path, tg_file_id)
+
+                    #инкрементируем msg_id, тк мы только что отправли msg
+                    msg_id_outcome += 1
+
+                    #сохраняем, что отправили
+                    queries_to_bd.save_outcome_data(chat_id, msg_id_outcome, 'audio voice', audio_path, 0, 0)
+
+
+                except:
+                    None
 
     #отправка квиза
     if poll_data != None:

@@ -114,15 +114,8 @@ def music(chat_id, btn_data):
         (text, reply_markup) = keyboards.music_songs_in_album(btn_data)
     #кнопка, открывающая последнее меню, которое отправляет песню и предлагает вернуться назад
     elif btn_data.startswith('2/4'):
-        full_song_path = queries_to_bd.get_song_path(btn_data)
-        file_size = (os.stat(full_song_path)).st_size / (1024 * 1024)
-        flag_success_size = -1
-        if file_size < 50:
-            flag_success_size = 1
-            audio_data = full_song_path
-        else:
-            flag_success_size = 0
-        (text, reply_markup) = keyboards.music_menu_last(flag_success_size, btn_data)
+        audio_data = queries_to_bd.get_song_path(btn_data)
+        (text, reply_markup) = keyboards.music_menu_last(btn_data)
     #кнопка, возвращающая на меню с песнями альбома
     elif btn_data.startswith("2/back_1/"):
         song_id = btn_data.replace("2/back_1/","")
