@@ -8,11 +8,8 @@ docker build -t ararararagi-bot .
 
 # 3. Запустить контейнер с пробросом music
 docker run -d --name ararararagi-bot \
-  --network mynet \
   --restart unless-stopped \
   -e TZ=Asia/Tokyo \
   -v /home/g1ts0/Github/Ararararagi_bot/assets:/app/assets \
+  --add-host=host.docker.internal:host-gateway \
   ararararagi-bot
-
-# 4. Смотреть логи в реальном времени (print(), traceback, всё)
-docker logs -f ararararagi-bot

@@ -3,6 +3,8 @@ import queries_to_bd
 import keyboards
 import telebot
 import common_methods
+import socket
+import requests
 
 #основной метод проверки входящих сообщений
 def main(bot, message):
@@ -17,6 +19,8 @@ def main(bot, message):
     poll_data = None
     invoice_data = None
     sticker_data = None
+    flg_response = None
+    flg_active_menu_message = 0
 
     #проверяем, задал ли бот вопрос пользователю, на который он обязательно должен ответить текстом в чате
     flg_need_response = queries_to_bd.check_need_response_flg(message.chat.id)
@@ -120,15 +124,45 @@ def main(bot, message):
             else:
                 current_result_text = 'Ты прислал не тот тип контента который нужен. Поздравляю тебя умник, начинай заново\n/menu'
 
+        flg_response = 1
+
     #в противном случае, бот не ждет ответа от пользователя в виде сообщения и поэтому отдает по умолчанию основную клавиатуру
     else:
 
-        #получает данные основной клавиатуры
-        (current_result_text, current_reply_markup) = keyboards.main_menu(message.chat.id)
+        #ветка только для меня - получение адреса ngrok, чтобы можно было подключиться по ssh к серверу
+        if message.content_type == 'text' and message.chat.id == 1275894304 and (message.text).lower() == '/ngrok':
 
+            current_result_text == None
+
+            try:
+                resp = requests.get(
+                    "http://host.docker.internal:4040/api/tunnels",
+                    timeout=3
+                )
+                resp.raise_for_status()
+
+                data = resp.json()
+
+                ngrok_url = None
+                for t in data.get("tunnels", []):
+                    if t.get("proto") == "tcp":
+                        ngrok_url = t.get("public_url")
+                        break
+
+                current_result_text = ngrok_url or "TCP-туннель ngrok не найден"
+
+            except Exception as e:
+                current_result_text = "Ошибка при получении ngrok URL: " + str(e)
+
+            flg_response = 0
+
+        else:
+            #получает данные основной клавиатуры
+            (current_result_text, current_reply_markup) = keyboards.main_menu(message.chat.id)
+            flg_response = 1
 
     #собираем текстовые данные
-    text_data = (current_result_text, current_reply_markup, current_parsemod, 0, 1)
+    text_data = (current_result_text, current_reply_markup, current_parsemod, flg_active_menu_message, flg_response)
 
     #отправляем все в единый метод отправки
     sending.main(bot, message.chat.id, text_data, photo_data, poll_data, audio_data, invoice_data, sticker_data, document_data)

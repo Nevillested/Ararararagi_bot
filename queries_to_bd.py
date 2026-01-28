@@ -120,7 +120,7 @@ def insert_new_msg_ver(data_from_message):
      limit 1
     """, (data_from_message.text, data_from_message.message_id))
 
-#сохраняет исходящие сообщения меню по нажатии пользователем на кнопку
+#сохраняет исходящие сообщения
 def save_outcome_data(chat_id, msg_id, msg_type, text, flg_main_menu, flg_need_response):
     cur.execute("""
     INSERT INTO arabot.outcome_data
