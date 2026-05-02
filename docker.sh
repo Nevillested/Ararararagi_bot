@@ -3,7 +3,13 @@ docker stop ararararagi-bot
 docker rm -f ararararagi-bot
 
 # 2. Запустить FlareSolverr если ещё не запущен
-if [ ! "$(docker ps -q -f name=flaresolverr)" ]; then
+if [ "$(docker ps -aq -f name=flaresolverr)" ]; then
+    # контейнер есть → запускаем если остановлен
+    if [ ! "$(docker ps -q -f name=flaresolverr)" ]; then
+        docker start flaresolverr
+    fi
+else
+    # контейнера нет → создаём
     docker run -d \
       --name flaresolverr \
       --restart unless-stopped \
