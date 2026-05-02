@@ -53,7 +53,6 @@ def main(bot, chat_id, text_data = None, photo_data = None, poll_data = None, au
     #отправка музыки
     if audio_data != None:
 
-
         #ловля ошибок, вдруг бот в блоке
         try:
             #отправляем сообщение, чтобы подождал мальца, тк иногад файл весит много

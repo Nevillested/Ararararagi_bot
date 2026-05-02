@@ -101,8 +101,8 @@ def start_bot():
     while True:
 
         try:
-           print('Запуск бота')
-           MypyBot.polling()
+            print('Запуск бота')
+            MypyBot.polling()
 
         except:
             print('Произошла ошибка, логируемся.')

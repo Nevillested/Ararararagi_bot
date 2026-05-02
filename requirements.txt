@@ -7,3 +7,5 @@ transliterate
 psycopg2-binary
 geopandas
 geopy
+cloudscraper
+beautifulsoup4

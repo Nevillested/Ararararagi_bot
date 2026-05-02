@@ -11,15 +11,35 @@ import segno
 import json
 import os
 import sending
+from bs4 import BeautifulSoup
+
 
 ############################### выдает массив или одиночну ссылку на пикчу по заданному тегу с данбору ###############################
 def get_url_data_pic(is_single_pic, tag, page):
 
     array_of_InlineQueryResultPhoto = []
+
     array_of_string_url = []
+
     url_string = "https://danbooru.donmai.us/posts.json?" + my_cfg.danboru_api_key + "&tags=" + tag.replace(',','&') + "&page=" + str(page)
-    response = requests.get(url_string)
-    response_list = response.json()
+
+    response = requests.post("http://flaresolverr:8191/v1", json={
+        "cmd": "request.get",
+        "url": url_string,
+        "maxTimeout": 60000
+    })
+
+    data = response.json()
+
+    raw = data["solution"]["response"]
+
+    # Извлекаем JSON из HTML обёртки
+    if raw.strip().startswith("<html"):
+        soup = BeautifulSoup(raw, "html.parser")
+        raw = soup.find("pre").text
+
+    response_list = json.loads(raw)
+
     cnt = 0
 
     if len(response_list) != 0:
