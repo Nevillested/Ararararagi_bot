@@ -8,7 +8,8 @@
             "name": "Run Go Arabot",
             "type": "go",
             "request": "launch",
-            "program": "${workspaceFolder}/Go/main.go"
+            "program": "${workspaceFolder}/Go/main.go",
+            "envFile": "${workspaceFolder}/Go/.env"
         }
     ]
 }
