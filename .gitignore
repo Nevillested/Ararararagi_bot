@@ -1,7 +1,13 @@
-my_cfg.py
+# секреты
+Python/my_cfg.py
+Go/.env
+
+# Python
 __pycache__/
-maids/
-music/
-stickers/
-temp/
-Env/
+*.pyc
+assets/
+
+# C#
+C#/bin/
+C#/obj/
+*.user
